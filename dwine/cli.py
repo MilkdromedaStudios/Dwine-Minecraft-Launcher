@@ -282,6 +282,34 @@ def cmd_safety(_args) -> int:
     return 1 if problems else 0
 
 
+
+def cmd_update(args) -> int:
+    from .launcher import update
+
+    info = update.check()
+    if not info.available:
+        print(f"Dwine is up to date ({info.current}).")
+        return 0
+    print(f"Update available: {info.current} → {info.latest}")
+    if info.url:
+        print(info.url)
+    if args.check:
+        return 0
+    update.apply(info)
+    print("Dwine was updated. Restart the launcher to use the new version.")
+    return 0
+
+
+def cmd_setup_path(_args) -> int:
+    from .core.command import command_on_path, install_command, path_hint
+
+    target = install_command()
+    print(f"Installed dwine command shim → {target}")
+    if not command_on_path():
+        print(path_hint())
+    return 0
+
+
 def cmd_plugins(_args) -> int:
     from .plugins.loader import load_all
 
@@ -370,6 +398,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("safety", help="audit the feature catalog + policy")
     sub.add_parser("plugins", help="list installed plugins")
+
+    p = sub.add_parser("update", help="check for and install Dwine updates")
+    p.add_argument("--check", action="store_true", help="only report availability")
+
+    sub.add_parser("setup-path", help="install the dwine command into your user PATH")
     return parser
 
 
@@ -389,6 +422,8 @@ HANDLERS = {
     "sync": cmd_sync,
     "safety": cmd_safety,
     "plugins": cmd_plugins,
+    "update": cmd_update,
+    "setup-path": cmd_setup_path,
 }
 
 
