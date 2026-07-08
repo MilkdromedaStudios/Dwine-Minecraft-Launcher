@@ -92,3 +92,45 @@ def test_cli_parser_smoke():
     assert args.server == "example.com"
     args = parser.parse_args(["mods", "install", "sodium", "--profile", "fps"])
     assert args.action == "install" and args.query == "sodium"
+
+
+def test_setup_path_writes_user_command(tmp_path, monkeypatch):
+    from dwine.core import command
+
+    monkeypatch.setenv("DWINE_BIN_DIR", str(tmp_path / "bin"))
+    target = command.install_command()
+    assert target.exists()
+    assert "python" in target.read_text(encoding="utf-8").lower()
+    assert "-m dwine" in target.read_text(encoding="utf-8")
+    hint = command.path_hint(target)
+    assert f"Command file location: {target}" in hint
+    assert "Environment variable to edit: PATH" in hint
+    assert str(target.parent) in hint
+
+
+def test_setup_app_writes_desktop_launcher(tmp_path, monkeypatch):
+    from dwine.core import command
+
+    monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "share"))
+    monkeypatch.setattr(command.sys, "platform", "linux")
+    targets = command.install_app_launcher()
+    assert targets == [tmp_path / "share" / "applications" / "dwine.desktop"]
+    text = targets[0].read_text(encoding="utf-8")
+    assert "Name=Dwine" in text
+    assert "Terminal=false" in text
+    assert "-m dwine ui" in text
+
+
+def test_update_parser_and_install_target():
+    from dwine.cli import build_parser
+    from dwine.launcher.update import UpdateInfo
+
+    parser = build_parser()
+    args = parser.parse_args(["update", "--check"])
+    assert args.command == "update"
+    assert args.check is True
+    args = parser.parse_args(["setup-app"])
+    assert args.command == "setup-app"
+    info = UpdateInfo(current="0.1.0", latest="v0.2.0", url="", notes="")
+    assert info.available
+    assert info.install_target.endswith("@v0.2.0")

@@ -111,9 +111,29 @@ settings page:
 # 1. Install Dwine with the UI, theming and Discord extras
 pip install "dwine[full] @ git+https://github.com/MilkdromedaStudios/Dwine"
 
-# 2. Open the launcher
-dwine
+# 2. Install a clickable app launcher, then open Dwine from your app menu
+python -m dwine setup-app
 ```
+
+`setup-app` creates a normal launcher you can open without a terminal:
+
+| System | What gets created |
+| --- | --- |
+| Windows | `Dwine.vbs` on your Desktop and in the Start Menu |
+| macOS | `$HOME/Applications/Dwine.app` |
+| Linux | `$HOME/.local/share/applications/dwine.desktop` and a Desktop copy when a Desktop folder exists |
+
+If you also want the `dwine` terminal command, run `python -m dwine setup-path`.
+If your terminal still says `dwine: command not found`, add one PATH entry.
+Environment-variable editors usually ask for only a variable **name** and a
+folder **path/value**:
+
+| System | Variable name | Path/value to add |
+| --- | --- | --- |
+| Windows | `Path` | `%APPDATA%\Python\Scripts` |
+| macOS / Linux | `PATH` | `$HOME/.local/bin` |
+
+Then reopen your terminal and run `dwine` again.
 
 From source instead:
 
@@ -121,7 +141,7 @@ From source instead:
 git clone https://github.com/MilkdromedaStudios/Dwine
 cd Dwine
 pip install -e ".[full]"
-dwine
+python -m dwine setup-app
 ```
 
 First run:
@@ -152,6 +172,10 @@ dwine clean --apply                     # sweep logs/caches
 dwine crash fps-mode                    # analyze the last crash
 dwine safety                            # run the feature-catalog audit
 dwine sync push                         # settings snapshot to your sync folder
+dwine update --check                    # check GitHub for a Dwine release
+dwine update                            # install the newest Dwine release
+dwine setup-path                        # repair/install the dwine command shim
+python -m dwine setup-app               # install a clickable app launcher
 ```
 
 ## 🏗 Architecture
