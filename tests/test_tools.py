@@ -102,6 +102,10 @@ def test_setup_path_writes_user_command(tmp_path, monkeypatch):
     assert target.exists()
     assert "python" in target.read_text(encoding="utf-8").lower()
     assert "-m dwine" in target.read_text(encoding="utf-8")
+    hint = command.path_hint(target)
+    assert f"Command file location: {target}" in hint
+    assert "Environment variable to edit: PATH" in hint
+    assert str(target.parent) in hint
 
 
 def test_update_parser_and_install_target():

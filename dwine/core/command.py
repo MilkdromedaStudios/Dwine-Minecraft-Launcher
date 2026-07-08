@@ -38,6 +38,30 @@ def command_on_path() -> bool:
     return shutil.which("dwine") is not None
 
 
+def path_hint(command_path: Path | None = None) -> str:
+    """Return exact PATH variable instructions and the shim file location."""
+    bin_dir = user_bin_dir()
+    command_path = command_path or bin_dir / ("dwine.cmd" if sys.platform == "win32" else "dwine")
+    if sys.platform == "win32":
+        return "\n".join([
+            f"Command file location: {command_path}",
+            "Environment variable to edit: Path (User environment variable)",
+            f"Value to add as a new Path entry: {bin_dir}",
+            "Windows UI: Settings → System → About → Advanced system settings "
+            "→ Environment Variables → User variables → Path → Edit → New",
+            "After saving, close and reopen your terminal, then run: dwine --help",
+        ])
+
+    shell_files = [Path.home() / ".bashrc", Path.home() / ".zshrc", Path.home() / ".profile"]
+    files = ", ".join(str(path) for path in shell_files)
+    return "\n".join([
+        f"Command file location: {command_path}",
+        "Environment variable to edit: PATH",
+        f"Value to add to the front of PATH: {bin_dir}",
+        f"Add this exact line to your shell startup file ({files}):",
+        f'export PATH="{bin_dir}:$PATH"',
+        "After saving, restart your terminal or run: source ~/.profile",
+    ])
 def path_hint() -> str:
     bin_dir = user_bin_dir()
     if sys.platform == "win32":

@@ -305,6 +305,10 @@ def cmd_setup_path(_args) -> int:
 
     target = install_command()
     print(f"Installed dwine command shim → {target}")
+    if command_on_path():
+        print("`dwine` is already available on PATH.")
+    else:
+        print(path_hint(target))
     if not command_on_path():
         print(path_hint())
     return 0
