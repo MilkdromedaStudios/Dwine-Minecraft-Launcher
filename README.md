@@ -111,9 +111,26 @@ settings page:
 # 1. Install Dwine with the UI, theming and Discord extras
 pip install "dwine[full] @ git+https://github.com/MilkdromedaStudios/Dwine"
 
-# 2. Open the launcher
+# 2. Ensure the `dwine` command is available, then open the launcher
+python -m dwine setup-path
 dwine
 ```
+
+If your terminal still says `dwine: command not found`, add Dwine's command
+folder to your user PATH environment variable, then reopen the terminal:
+
+- **Windows**
+  - Environment variable name: `Path` under **User variables**
+  - Value to add: `%APPDATA%\Python\Scripts`
+  - The command file should be at: `%APPDATA%\Python\Scripts\dwine.cmd`
+- **macOS / Linux**
+  - Environment variable name: `PATH`
+  - Value to add: `$HOME/.local/bin`
+  - Add this line to `~/.bashrc`, `~/.zshrc`, or `~/.profile`:
+    ```bash
+    export PATH="$HOME/.local/bin:$PATH"
+    ```
+  - The command file should be at: `$HOME/.local/bin/dwine`
 
 From source instead:
 
@@ -121,6 +138,7 @@ From source instead:
 git clone https://github.com/MilkdromedaStudios/Dwine
 cd Dwine
 pip install -e ".[full]"
+python -m dwine setup-path
 dwine
 ```
 
@@ -152,6 +170,9 @@ dwine clean --apply                     # sweep logs/caches
 dwine crash fps-mode                    # analyze the last crash
 dwine safety                            # run the feature-catalog audit
 dwine sync push                         # settings snapshot to your sync folder
+dwine update --check                    # check GitHub for a Dwine release
+dwine update                            # install the newest Dwine release
+dwine setup-path                        # repair/install the dwine command shim
 ```
 
 ## 🏗 Architecture
