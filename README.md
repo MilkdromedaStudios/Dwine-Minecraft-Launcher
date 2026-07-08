@@ -113,26 +113,24 @@ pip install "dwine[full] @ git+https://github.com/MilkdromedaStudios/Dwine"
 
 # 2. Ensure the `dwine` command is available, then open the launcher
 python -m dwine setup-path
+dwine
+```
+
+If your terminal still says `dwine: command not found`, add one PATH entry.
+Environment-variable editors usually ask for only a variable **name** and a
+folder **path/value**:
+
+| System | Variable name | Path/value to add |
+| --- | --- | --- |
+| Windows | `Path` | `%APPDATA%\Python\Scripts` |
+| macOS / Linux | `PATH` | `$HOME/.local/bin` |
+
+Then reopen your terminal and run `dwine` again.
 # If prompted, add the printed folder to the PATH environment variable,
 # then reopen your terminal.
 dwine
 ```
 
-If your terminal still says `dwine: command not found`, add Dwine's command
-folder to your user PATH environment variable, then reopen the terminal:
-
-- **Windows**
-  - Environment variable name: `Path` under **User variables**
-  - Value to add: `%APPDATA%\Python\Scripts`
-  - The command file should be at: `%APPDATA%\Python\Scripts\dwine.cmd`
-- **macOS / Linux**
-  - Environment variable name: `PATH`
-  - Value to add: `$HOME/.local/bin`
-  - Add this line to `~/.bashrc`, `~/.zshrc`, or `~/.profile`:
-    ```bash
-    export PATH="$HOME/.local/bin:$PATH"
-    ```
-  - The command file should be at: `$HOME/.local/bin/dwine`
 
 From source instead:
 
