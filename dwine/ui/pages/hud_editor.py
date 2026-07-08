@@ -149,9 +149,8 @@ class HudEditorPage(QWidget):
         top = QHBoxLayout()
         top.addWidget(QLabel("Profile:"))
         self.profile_box = QComboBox()
-        for profile in self.store.list():
-            self.profile_box.addItem(profile.name, profile.slug)
         self.profile_box.currentIndexChanged.connect(self._load_layout)
+        self.reload_profiles()
         top.addWidget(self.profile_box, 1)
 
         self.element_box = QComboBox()
@@ -176,11 +175,27 @@ class HudEditorPage(QWidget):
         layout.addWidget(self.canvas, 1)
         self._load_layout()
 
+    def reload_profiles(self) -> None:
+        current = self.profile_box.currentData()
+        self.profile_box.clear()
+        for profile in self.store.list():
+            self.profile_box.addItem(profile.name, profile.slug)
+            if profile.slug == current:
+                self.profile_box.setCurrentIndex(self.profile_box.count() - 1)
+
+    def showEvent(self, event) -> None:  # noqa: N802
+        super().showEvent(event)
+        self.reload_profiles()
+
     def _game_dir(self):
         slug = self.profile_box.currentData()
-        return self.store.load(slug).game_dir if slug else None
+        if slug and self.store.exists(slug):
+            return self.store.load(slug).game_dir
+        return None
 
     def _load_layout(self) -> None:
+        if not hasattr(self, "canvas"):  # combo fires while page is built
+            return
         game_dir = self._game_dir()
         self.model = HudLayout.load(game_dir) if game_dir else default_layout()
         self.canvas.model = self.model

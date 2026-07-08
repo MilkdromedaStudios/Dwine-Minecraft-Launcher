@@ -120,7 +120,8 @@ def audit_catalog() -> list[str]:
     problems: list[str] = []
     banned_words = ("killaura", "aimbot", "reach", "velocity", "autototem", "scaffold")
     for fid, feature in FEATURES.items():
-        text = (feature.name + " " + feature.description).lower()
+        setting_text = " ".join(s.label for s in feature.settings)
+        text = " ".join((feature.name, feature.description, setting_text)).lower()
         for word in banned_words:
             if word in text:
                 problems.append(f"{fid}: mentions '{word}'")

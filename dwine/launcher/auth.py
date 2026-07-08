@@ -83,9 +83,18 @@ def start_device_login(
 ) -> Session:
     """Interactive login. ``on_code(verification_url, user_code)`` shows the prompt."""
     client_id = _client_id()
-    device = _post_json(
-        DEVICE_CODE_URL, data={"client_id": client_id, "scope": SCOPE}
-    )
+    try:
+        device = _post_json(
+            DEVICE_CODE_URL, data={"client_id": client_id, "scope": SCOPE}
+        )
+    except AuthError as exc:
+        if "unauthorized_client" in str(exc) or "invalid_client" in str(exc):
+            raise AuthError(
+                "Microsoft rejected the client ID. Check auth.client_id and "
+                "make sure the Azure app has 'Allow public client flows' "
+                "enabled (Authentication tab)."
+            ) from exc
+        raise
     on_code(device["verification_uri"], device["user_code"])
 
     interval = int(device.get("interval", 5))
@@ -101,7 +110,10 @@ def start_device_login(
             },
             timeout=30,
         )
-        body = resp.json()
+        try:
+            body = resp.json()
+        except ValueError:  # transient gateway hiccup: keep polling
+            continue
         if resp.status_code == 200:
             return _finish_microsoft_login(body)
         error = body.get("error", "")
@@ -109,7 +121,11 @@ def start_device_login(
             if error == "slow_down":
                 interval += 5
             continue
-        raise AuthError(f"Microsoft login failed: {error}")
+        if error == "expired_token":
+            raise AuthError("The code expired before it was entered — try again.")
+        if error == "authorization_declined":
+            raise AuthError("Sign-in was declined in the browser.")
+        raise AuthError(f"Microsoft login failed: {error or resp.status_code}")
     raise AuthError("Login timed out — the code was never entered.")
 
 

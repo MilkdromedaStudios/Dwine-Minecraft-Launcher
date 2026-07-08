@@ -5,9 +5,11 @@ from __future__ import annotations
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
+    QDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
+    QPushButton,
     QScrollArea,
     QSlider,
     QVBoxLayout,
@@ -66,16 +68,33 @@ class SettingsPage(QWidget):
 
         crosshair_box = QComboBox()
         active_preset = (cfg.get("crosshair", {}) or {}).get("preset", "default")
-        for name in CROSSHAIR_PRESETS:
-            crosshair_box.addItem(name, name)
+        for name in (*CROSSHAIR_PRESETS, "custom"):
+            crosshair_box.addItem(
+                "custom (drawpad)" if name == "custom" else name, name)
             if name == active_preset:
                 crosshair_box.setCurrentIndex(crosshair_box.count() - 1)
         crosshair_box.currentIndexChanged.connect(
             lambda _i: cfg.set("crosshair.preset", crosshair_box.currentData())
         )
         appearance.add(SettingRow(
-            "Crosshair", "Shape/color presets; rendered into the theme pack.",
-            crosshair_box))
+            "Crosshair", "Starting shapes, or your own drawpad drawing; "
+            "rendered into the theme pack.", crosshair_box))
+
+        drawpad_button = QPushButton("Open crosshair drawpad …")
+
+        def open_drawpad() -> None:
+            from ..crosshair_pad import CrosshairDrawpadDialog
+
+            if CrosshairDrawpadDialog(self).exec() == QDialog.DialogCode.Accepted:
+                index = crosshair_box.findData("custom")
+                if index >= 0:
+                    crosshair_box.setCurrentIndex(index)
+                self.window.notify("Custom crosshair saved.", "success")
+
+        drawpad_button.clicked.connect(open_drawpad)
+        appearance.add(SettingRow(
+            "Crosshair drawpad", "Paint a pixel-perfect crosshair of your own.",
+            drawpad_button))
         layout.addWidget(appearance)
 
         # -- game -------------------------------------------------------------

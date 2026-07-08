@@ -55,9 +55,13 @@ def cmd_install(args) -> int:
     return 0
 
 
-def cmd_login(_args) -> int:
+def cmd_login(args) -> int:
     from .launcher import auth
     from .launcher.accounts import AccountStore
+
+    if getattr(args, "client_id", ""):
+        get_config().set("auth.client_id", args.client_id.strip())
+        print("Saved auth.client_id to settings.json.")
 
     def show_code(url: str, code: str) -> None:
         print(f"\nOpen {url} and enter code: {code}\n")
@@ -105,7 +109,7 @@ def cmd_launch(args) -> int:
 
 
 def cmd_profile(args) -> int:
-    from .launcher.profiles import BUILTIN_PRESETS, Profile, ProfileStore
+    from .launcher.profiles import Profile, ProfileStore
 
     store = ProfileStore()
     if args.action == "list":
@@ -113,13 +117,9 @@ def cmd_profile(args) -> int:
             print(f"{profile.name:<20} {profile.version or 'latest':<10} "
                   f"{profile.loader:<8} {profile.description}")
     elif args.action == "create":
-        if args.preset:
-            profile = store.create_from_preset(
-                args.preset, version=args.mc or "", name=args.name or "")
-        else:
-            profile = Profile(name=args.name or "New Profile",
-                              version=args.mc or "", loader=args.loader)
-            store.save(profile)
+        profile = Profile(name=args.name or "New Profile",
+                          version=args.mc or "", loader=args.loader)
+        store.save(profile)
         print(f"Created profile: {profile.name}")
     elif args.action == "delete":
         store.delete(args.name, remove_data=args.purge)
@@ -134,16 +134,12 @@ def cmd_profile(args) -> int:
 
         profile = store.import_(Path(args.file))
         print(f"Imported profile: {profile.name}")
-    elif args.action == "presets":
-        for key, spec in BUILTIN_PRESETS.items():
-            print(f"{key:<12} {spec['display_name']:<16} {spec['description']}")
     return 0
 
 
 def cmd_mods(args) -> int:
     from .content import modrinth
     from .content.mods import ModManager
-    from .content.presets import PRESETS, install_preset
     from .launcher.profiles import ProfileStore
 
     store = ProfileStore()
@@ -170,13 +166,6 @@ def cmd_mods(args) -> int:
                 print(f"updated {slug} → {version}")
         else:
             print("Everything is up to date.")
-    elif args.action == "preset":
-        if args.query not in PRESETS:
-            print(f"Presets: {', '.join(PRESETS)}")
-            return 2
-        report = install_preset(profile, args.query)
-        print(f"Installed {len(report['installed'])} mod(s); "
-              f"skipped {len(report['skipped'])}: {', '.join(report['skipped'])}")
     return 0
 
 
@@ -306,11 +295,10 @@ def cmd_setup_path(_args) -> int:
     target = install_command()
     print(f"Installed dwine command shim → {target}")
     if command_on_path():
-        print("`dwine` is already available on PATH.")
+        print("`dwine` is already available on PATH — you're done.")
     else:
+        print("\nOne step left — put the shim folder on your PATH:\n")
         print(path_hint(target))
-    if not command_on_path():
-        print(path_hint())
     return 0
 
 
@@ -352,7 +340,9 @@ def build_parser() -> argparse.ArgumentParser:
                    choices=["vanilla", "fabric", "quilt", "forge"])
     p.add_argument("--loader-version", default="")
 
-    sub.add_parser("login", help="add a Microsoft account (device code)")
+    p = sub.add_parser("login", help="add a Microsoft account (device code)")
+    p.add_argument("--client-id", default="",
+                   help="save your Azure application (client) ID first")
 
     p = sub.add_parser("launch", help="launch a profile")
     p.add_argument("profile")
@@ -364,9 +354,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("profile", help="manage profiles")
     p.add_argument("action", choices=["list", "create", "delete", "export",
-                                      "import", "presets"])
+                                      "import"])
     p.add_argument("name", nargs="?", default="")
-    p.add_argument("--preset", default="", help="fps | pvp | skyblock | cinematic")
     p.add_argument("--mc", default="")
     p.add_argument("--loader", default="fabric")
     p.add_argument("--file", default="")
@@ -375,7 +364,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("mods", help="manage mods for a profile")
     p.add_argument("action", choices=["search", "install", "remove", "list",
-                                      "update", "preset"])
+                                      "update"])
     p.add_argument("query", nargs="?", default="")
     p.add_argument("--profile", required=True)
 

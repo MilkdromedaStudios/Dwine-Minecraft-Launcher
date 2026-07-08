@@ -1,4 +1,9 @@
-"""Mods & Packs: Modrinth search, one-click installs, updates, presets."""
+"""Mods & Packs: Modrinth search, one-click installs, updates.
+
+Everything installs from Modrinth's official API with sha512
+verification. The profile list refreshes every time the page is shown,
+so profiles created on Home (or from the CLI) appear immediately.
+"""
 
 from __future__ import annotations
 
@@ -18,7 +23,6 @@ from PySide6.QtWidgets import (
 
 from ...content import modrinth
 from ...content.mods import ModManager
-from ...content.presets import PRESETS, install_preset
 from ...content.resourcepacks import ResourcePackManager
 from ...content.shaders import ShaderManager
 from ...launcher.profiles import ProfileStore
@@ -37,17 +41,8 @@ class ModsPage(QWidget):
         top = QHBoxLayout()
         top.addWidget(QLabel("Profile:"))
         self.profile_box = QComboBox()
-        for profile in self.store.list():
-            self.profile_box.addItem(profile.name, profile.slug)
         top.addWidget(self.profile_box, 1)
-
-        self.preset_box = QComboBox()
-        for key, preset in PRESETS.items():
-            self.preset_box.addItem(f"Preset: {preset.name}", key)
-        apply_preset = QPushButton("Install preset")
-        apply_preset.clicked.connect(self.apply_preset)
-        top.addWidget(self.preset_box)
-        top.addWidget(apply_preset)
+        self.reload_profiles()
         layout.addLayout(top)
 
         tabs = QTabWidget()
@@ -58,11 +53,27 @@ class ModsPage(QWidget):
 
     # ------------------------------------------------------------------
 
+    def reload_profiles(self) -> None:
+        current = self.profile_box.currentData()
+        self.profile_box.clear()
+        for profile in self.store.list():
+            label = f"{profile.name} · {profile.version or 'latest'} · {profile.loader}"
+            self.profile_box.addItem(label, profile.slug)
+            if profile.slug == current:
+                self.profile_box.setCurrentIndex(self.profile_box.count() - 1)
+
+    def showEvent(self, event) -> None:  # noqa: N802
+        super().showEvent(event)
+        self.reload_profiles()
+
     def _profile(self):
         slug = self.profile_box.currentData()
-        if not slug:
-            raise RuntimeError("Create a profile on the Home tab first.")
-        return self.store.load(slug)
+        if slug and self.store.exists(slug):
+            return self.store.load(slug)
+        # Never dead-end the page: fall back to (or create) a default.
+        profile = self.store.ensure_default()
+        self.reload_profiles()
+        return profile
 
     def _manager(self, kind: str, profile):
         if kind == "mod":
@@ -80,22 +91,40 @@ class ModsPage(QWidget):
         search = QLineEdit()
         search.setPlaceholderText(f"Search Modrinth {kind}s …")
         results = QListWidget()
+        results.setWordWrap(True)
         button = QPushButton("Search")
+        status = QLabel("")
+        status.setObjectName("Muted")
 
         def run_search() -> None:
             query = search.text().strip()
-            profile = self._profile()
+            try:
+                profile = self._profile()
+            except Exception as exc:  # noqa: BLE001 - surface, don't crash the slot
+                self.window.notify(str(exc), "error")
+                return
+            status.setText("Searching Modrinth …")
+            button.setEnabled(False)
 
             def do():
                 return modrinth.search(
                     query,
                     project_type=kind,
                     game_version=profile.version or None,
-                    loader=profile.loader if kind == "mod" else None,
+                    loader=profile.loader if kind == "mod" and
+                    profile.loader != "vanilla" else None,
                 )
 
             def done(hits):
+                button.setEnabled(True)
                 results.clear()
+                if not hits:
+                    status.setText(
+                        f"No {kind}s found for '{query}' on "
+                        f"{profile.version or 'latest'} ({profile.loader}).")
+                    return
+                status.setText(f"{len(hits)} result(s) — double-click or "
+                               "select + Install.")
                 for hit in hits:
                     item = QListWidgetItem(
                         f"{hit.title}  ·  {hit.downloads:,} downloads\n"
@@ -104,13 +133,19 @@ class ModsPage(QWidget):
                     item.setData(Qt.ItemDataRole.UserRole, hit.slug)
                     results.addItem(item)
 
-            self.window.run_async(do, on_done=done)
+            def failed(message: str) -> None:
+                button.setEnabled(True)
+                status.setText("Search failed — check your connection.")
+                self.window.notify(f"Modrinth search failed: {message}", "error")
+
+            self.window.run_async(do, on_done=done, on_error=failed)
 
         button.clicked.connect(run_search)
         search.returnPressed.connect(run_search)
         search_row.addWidget(search, 1)
         search_row.addWidget(button)
         layout.addLayout(search_row)
+        layout.addWidget(status)
         layout.addWidget(results, 1)
 
         actions = QHBoxLayout()
@@ -120,25 +155,47 @@ class ModsPage(QWidget):
         def do_install() -> None:
             item = results.currentItem()
             if not item:
+                self.window.notify("Select a search result first.", "info")
                 return
             slug = item.data(Qt.ItemDataRole.UserRole)
-            profile = self._profile()
+            try:
+                profile = self._profile()
+            except Exception as exc:  # noqa: BLE001
+                self.window.notify(str(exc), "error")
+                return
+            if kind == "mod" and profile.loader == "vanilla":
+                self.window.notify(
+                    "Mods need a loader — switch this profile to Fabric, "
+                    "Quilt or Forge on the Home tab.", "warning")
+                return
             manager = self._manager(kind, profile)
-            self.window.run_async(
-                lambda: manager.install(slug),
-                on_done=lambda _r: self.window.notify(
-                    f"Installed {slug} into {profile.name}", "success"
-                ),
-            )
+            install.setEnabled(False)
+
+            def done(_result) -> None:
+                install.setEnabled(True)
+                self.window.notify(
+                    f"Installed {slug} into {profile.name}", "success")
+
+            def failed(message: str) -> None:
+                install.setEnabled(True)
+                self.window.notify(f"Install failed: {message}", "error")
+
+            self.window.run_async(lambda: manager.install(slug),
+                                  on_done=done, on_error=failed)
 
         install.clicked.connect(do_install)
+        results.itemDoubleClicked.connect(lambda _item: do_install())
         actions.addWidget(install)
 
         if kind == "mod":
             update_all = QPushButton("Update all")
 
             def do_update() -> None:
-                profile = self._profile()
+                try:
+                    profile = self._profile()
+                except Exception as exc:  # noqa: BLE001
+                    self.window.notify(str(exc), "error")
+                    return
                 manager = ModManager(profile)
                 self.window.run_async(
                     manager.update_all,
@@ -155,16 +212,3 @@ class ModsPage(QWidget):
         actions.addStretch(1)
         layout.addLayout(actions)
         return page
-
-    def apply_preset(self) -> None:
-        key = self.preset_box.currentData()
-        profile = self._profile()
-
-        def done(report):
-            installed, skipped = report["installed"], report["skipped"]
-            message = f"Preset installed: {len(installed)} mod(s)"
-            if skipped:
-                message += f", {len(skipped)} skipped (no build for {profile.version})"
-            self.window.notify(message, "success")
-
-        self.window.run_async(lambda: install_preset(profile, key), on_done=done)

@@ -62,8 +62,3 @@ def path_hint(command_path: Path | None = None) -> str:
         f'export PATH="{bin_dir}:$PATH"',
         "After saving, restart your terminal or run: source ~/.profile",
     ])
-def path_hint() -> str:
-    bin_dir = user_bin_dir()
-    if sys.platform == "win32":
-        return f"Add {bin_dir} to your user Path environment variable."
-    return f'Add this to your shell profile: export PATH="{bin_dir}:$PATH"'
