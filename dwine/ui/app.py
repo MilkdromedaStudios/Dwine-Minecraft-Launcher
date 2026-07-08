@@ -133,6 +133,7 @@ class DwineWindow(QMainWindow):
         self.rpc = RichPresence()
         self.rpc.connect()
         self.apply_theme()
+        self._start_auto_update_check()
 
     # ------------------------------------------------------------------
 
@@ -153,6 +154,22 @@ class DwineWindow(QMainWindow):
 
     def notify(self, text: str, level: str = "info") -> None:
         self.notifications.notify(text, level)
+
+    def _start_auto_update_check(self) -> None:
+        if not get_config().get("launcher.auto_update", True):
+            return
+
+        def done(info) -> None:
+            if info.available:
+                self.notify(
+                    f"Dwine update available: {info.current} → {info.latest}. "
+                    "Run `dwine update` to install it.",
+                    "info",
+                )
+
+        from ..launcher import update
+
+        self.run_async(update.check, on_done=done, on_error=lambda _msg: None)
 
     def run_async(self, fn, on_done=None, on_error=None, *args, **kwargs) -> None:
         thread = QThread(self)

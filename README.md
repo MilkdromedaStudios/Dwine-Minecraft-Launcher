@@ -111,7 +111,10 @@ settings page:
 # 1. Install Dwine with the UI, theming and Discord extras
 pip install "dwine[full] @ git+https://github.com/MilkdromedaStudios/Dwine"
 
-# 2. Open the launcher
+# 2. Ensure the `dwine` command is available, then open the launcher
+python -m dwine setup-path
+# If prompted, add the printed folder to the PATH environment variable,
+# then reopen your terminal.
 dwine
 ```
 
@@ -121,6 +124,9 @@ From source instead:
 git clone https://github.com/MilkdromedaStudios/Dwine
 cd Dwine
 pip install -e ".[full]"
+python -m dwine setup-path
+# If prompted, add the printed folder to the PATH environment variable,
+# then reopen your terminal.
 dwine
 ```
 
@@ -152,6 +158,9 @@ dwine clean --apply                     # sweep logs/caches
 dwine crash fps-mode                    # analyze the last crash
 dwine safety                            # run the feature-catalog audit
 dwine sync push                         # settings snapshot to your sync folder
+dwine update --check                    # check GitHub for a Dwine release
+dwine update                            # install the newest Dwine release
+dwine setup-path                        # repair/install the dwine command shim
 ```
 
 ## 🏗 Architecture
