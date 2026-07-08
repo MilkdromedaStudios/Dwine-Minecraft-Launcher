@@ -113,6 +113,8 @@ pip install "dwine[full] @ git+https://github.com/MilkdromedaStudios/Dwine"
 
 # 2. Ensure the `dwine` command is available, then open the launcher
 python -m dwine setup-path
+# If prompted, add the printed folder to the PATH environment variable,
+# then reopen your terminal.
 dwine
 ```
 
