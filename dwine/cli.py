@@ -309,6 +309,8 @@ def cmd_setup_path(_args) -> int:
         print("`dwine` is already available on PATH.")
     else:
         print(path_hint(target))
+    if not command_on_path():
+        print(path_hint())
     return 0
 
 

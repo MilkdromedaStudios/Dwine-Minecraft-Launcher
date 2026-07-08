@@ -126,6 +126,11 @@ folder **path/value**:
 | macOS / Linux | `PATH` | `$HOME/.local/bin` |
 
 Then reopen your terminal and run `dwine` again.
+# If prompted, add the printed folder to the PATH environment variable,
+# then reopen your terminal.
+dwine
+```
+
 
 From source instead:
 
