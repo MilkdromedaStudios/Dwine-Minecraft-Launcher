@@ -117,3 +117,18 @@ def test_offline_session_is_deterministic():
     second = offline_session("Steve")
     assert first["uuid"] == second["uuid"]
     assert first["access_token"] == "0"
+    assert first["user_type"] == "legacy"
+
+
+def test_account_store_can_persist_offline_account():
+    from dwine.launcher.accounts import AccountStore
+    from dwine.launcher.auth import offline_session
+
+    store = AccountStore()
+    store.add(offline_session("Alex"))
+
+    reloaded = AccountStore()
+    active = reloaded.active()
+    assert active is not None
+    assert active["name"] == "Alex"
+    assert active["user_type"] == "legacy"
