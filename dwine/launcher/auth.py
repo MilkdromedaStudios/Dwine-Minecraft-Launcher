@@ -6,11 +6,20 @@ passwords and never talks to unofficial endpoints, which is part of
 what keeps it ban-safe.
 
 You need an Azure application (client) ID with the
-``XboxLive.signin offline_access`` scope. Create one for free at
-https://portal.azure.com (Microsoft identity platform -> App
-registrations, enable "Allow public client flows") and put the ID in
-``settings.json`` under ``auth.client_id`` or the ``DWINE_MSA_CLIENT_ID``
-environment variable.
+``XboxLive.signin offline_access`` scope. Creating one is **free**: it
+needs a Microsoft account, not an Azure subscription, and no credit
+card — app registration is part of Microsoft Entra ID's free tier. At
+https://portal.azure.com open Microsoft Entra ID -> App registrations
+-> New registration (account type "Personal Microsoft accounts", no
+redirect URI), enable "Allow public client flows" under Authentication,
+then put the Application (client) ID in ``settings.json`` under
+``auth.client_id`` or the ``DWINE_MSA_CLIENT_ID`` environment variable.
+If the portal pushes a free trial / subscription sign-up, skip it — it
+is not required for app registration.
+
+New client IDs must also be allow-listed by Mojang once (free form:
+https://aka.ms/mce-reviewappid) before api.minecraftservices.com will
+accept them; until then the final login step returns HTTP 403.
 """
 
 from __future__ import annotations
@@ -182,10 +191,20 @@ def _finish_microsoft_login(ms_tokens: dict[str, Any]) -> Session:
     xsts_body = xsts.json()
     xuid = xsts_body["DisplayClaims"]["xui"][0].get("xid", "")
 
-    mc = _post_json(
-        MC_LOGIN_URL,
-        json={"identityToken": f"XBL3.0 x={user_hash};{xsts_body['Token']}"},
-    )
+    try:
+        mc = _post_json(
+            MC_LOGIN_URL,
+            json={"identityToken": f"XBL3.0 x={user_hash};{xsts_body['Token']}"},
+        )
+    except AuthError as exc:
+        if f"{MC_LOGIN_URL} -> 403" in str(exc):
+            raise AuthError(
+                "Minecraft services refused this client ID (HTTP 403). "
+                "New Azure app IDs must be allow-listed by Mojang once — "
+                "submit the free form at https://aka.ms/mce-reviewappid "
+                "and try again after the confirmation email."
+            ) from exc
+        raise
     mc_token = mc["access_token"]
     expires_at = time.time() + int(mc.get("expires_in", 86400)) - 120
 
