@@ -18,15 +18,16 @@ class ResourcePackManager:
         return modrinth.search(
             query,
             project_type="resourcepack",
-            game_version=self.profile.version,
+            game_version=self.profile.effective_version(),
             limit=limit,
         )
 
     def install(self, slug: str) -> Path:
-        version = modrinth.best_version(slug, game_version=self.profile.version)
+        game_version = self.profile.effective_version()
+        version = modrinth.best_version(slug, game_version=game_version)
         if version is None:
             raise LookupError(
-                f"{slug!r} has no pack for Minecraft {self.profile.version}"
+                f"{slug!r} has no pack for Minecraft {game_version}"
             )
         file = version.primary_file
         dest = self.profile.resourcepacks_dir / file.filename

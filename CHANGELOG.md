@@ -2,6 +2,36 @@
 
 ## Unreleased
 
+**Login without Azure — link code**
+- New default sign-in: click **Sign in with Microsoft**, enter a short code
+  at microsoft.com/link, done. Uses the official Minecraft launcher's public
+  client ID against Microsoft's official device-code endpoints — no Azure
+  account, no app registration, no setup. (CLI: `dwine login`.)
+- Your own Azure app still works: paste its client ID under
+  *Accounts → Advanced* (or `dwine login --client-id <ID>`) and Dwine uses
+  it instead. Existing Azure-flow accounts keep refreshing as before.
+
+**Modrinth actually matches your game version now**
+- Profiles set to "Latest release" previously searched and installed mods
+  with **no version filter at all**, so the newest build won even when it
+  was for a different Minecraft version — installs then crashed or silently
+  didn't load. "Latest release" now resolves to the real version id before
+  every search, install and update.
+- `dwine mods search` no longer returns nothing for vanilla-loader profiles
+  (it sent `categories:vanilla` as a Modrinth facet).
+
+**A real mod manager**
+- The Mods & Packs page now shows what's installed per profile — including
+  jars you dropped into `mods/` yourself — with Remove and Update All next
+  to search/install. Resource packs and shaders get the same treatment.
+
+**Back to basics**
+- The launcher is now just: Home (version chooser + Play), Mods & Packs,
+  Logs, Accounts, Settings. The feature catalog, HUD editor, crosshair
+  drawpad, screenshots gallery, news feed, in-game theme pack, Discord/
+  Spotify/cosmetics integrations and settings sync are gone — client mods
+  from Modrinth are the feature system.
+
 **Login that actually works**
 - Fixed the Microsoft device-code prompt never appearing (it was updated from
   a worker thread); the code now shows up and your browser opens automatically

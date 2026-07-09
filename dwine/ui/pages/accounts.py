@@ -1,18 +1,11 @@
-"""Accounts: Microsoft device-code login, offline accounts and switching.
+"""Accounts: Microsoft link-code login (no setup), offline accounts, switching.
 
-Two fixes worth knowing about:
-
-* the device code arrives on a worker thread, so it is forwarded to the
-  UI through a queued signal — updating widgets directly from the worker
-  silently broke the whole flow;
-* Microsoft requires every launcher to bring its own (free) Azure app
-  ID, so the page includes the field to paste it — without one, login
-  cannot work at all.
+The device code arrives on a worker thread, so it is forwarded to the
+UI through a queued signal — updating widgets directly from the worker
+silently broke the whole flow.
 """
 
 from __future__ import annotations
-
-import os
 
 from PySide6.QtCore import Qt, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
@@ -33,25 +26,15 @@ from ...launcher.accounts import AccountStore
 from ..widgets import Card
 
 AZURE_HELP = (
-    "Microsoft requires each launcher to register its own app ID. "
-    "<b>This is free</b> — you need a Microsoft account, <i>not</i> a paid "
-    "Azure subscription, and no credit card (app registration is part of "
-    "Microsoft Entra ID's free tier):<br>"
-    "1. Open <a href='https://portal.azure.com'>portal.azure.com</a> and "
-    "sign in with any Microsoft account. If it offers a free trial or asks "
-    "for payment details to create a <i>subscription</i>, skip it — app "
-    "registration doesn't need one.<br>"
-    "2. Microsoft Entra ID → App registrations → New registration: any "
-    "name · account type <i>Personal Microsoft accounts</i> · no redirect "
-    "URI needed.<br>"
-    "3. In the app: Authentication → enable <b>Allow public client "
-    "flows</b> → Save.<br>"
-    "4. Copy the <b>Application (client) ID</b> from Overview and paste "
-    "it above.<br>"
-    "If login later fails with a 403, Mojang still needs to allow-list "
-    "your ID once — submit the free form at "
-    "<a href='https://aka.ms/mce-reviewappid'>aka.ms/mce-reviewappid</a> "
-    "and try again after the confirmation email."
+    "Optional. By default Dwine signs you in with a link code and no "
+    "setup at all. If you'd rather run auth through your own (free) "
+    "Azure app registration, paste its Application (client) ID here and "
+    "Dwine will use it instead: portal.azure.com → Microsoft Entra ID → "
+    "App registrations → New registration (account type <i>Personal "
+    "Microsoft accounts</i>, no redirect URI), then enable <b>Allow "
+    "public client flows</b> under Authentication. New IDs must be "
+    "allow-listed by Mojang once via "
+    "<a href='https://aka.ms/mce-reviewappid'>aka.ms/mce-reviewappid</a>."
 )
 
 
@@ -68,27 +51,53 @@ class AccountsPage(QWidget):
         layout.setContentsMargins(32, 28, 32, 28)
         layout.setSpacing(14)
 
-        # -- one-time setup: the Azure client ID --------------------------
-        setup = Card("Login setup (one time)")
-        self.client_id_edit = QLineEdit(get_config().get("auth.client_id", ""))
-        self.client_id_edit.setPlaceholderText(
-            "Azure application (client) ID — required for Microsoft login")
-        self.client_id_edit.editingFinished.connect(self._save_client_id)
-        setup.add(self.client_id_edit)
-        help_label = QLabel(AZURE_HELP)
-        help_label.setObjectName("Muted")
-        help_label.setWordWrap(True)
-        help_label.setOpenExternalLinks(True)
-        help_label.setTextFormat(Qt.TextFormat.RichText)
-        setup.add(help_label)
-        layout.addWidget(setup)
+        # -- Microsoft login (link code, zero setup) -----------------------
+        login_card = Card("Microsoft account")
+        login_note = QLabel(
+            "Sign in with a <b>link code</b> — click the button, enter the "
+            "short code at <b>microsoft.com/link</b> in any browser (even on "
+            "your phone), done. No Azure, no app registration, no setup. "
+            "Your password never touches Dwine."
+        )
+        login_note.setObjectName("Muted")
+        login_note.setWordWrap(True)
+        login_note.setTextFormat(Qt.TextFormat.RichText)
+        login_card.add(login_note)
 
-        # -- free/local account -------------------------------------------
-        offline = Card("Offline account (no Microsoft/Azure)")
+        self.code_label = QLabel("")
+        self.code_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse)
+        self.code_label.setWordWrap(True)
+        self.code_label.setTextFormat(Qt.TextFormat.RichText)
+
+        self.account_list = QListWidget()
+        self._reload()
+
+        buttons = QHBoxLayout()
+        self.login_button = QPushButton("Sign in with Microsoft")
+        self.login_button.setObjectName("Primary")
+        self.login_button.clicked.connect(self._login)
+        activate = QPushButton("Set active")
+        activate.clicked.connect(self._activate)
+        remove = QPushButton("Remove")
+        remove.setObjectName("Danger")
+        remove.clicked.connect(self._remove)
+        buttons.addWidget(self.login_button)
+        buttons.addWidget(activate)
+        buttons.addWidget(remove)
+        buttons.addStretch(1)
+
+        login_card.add(self.account_list)
+        login_card.add_layout(buttons)
+        login_card.add(self.code_label)
+        layout.addWidget(login_card)
+
+        # -- offline account -----------------------------------------------
+        offline = Card("Offline account (singleplayer testing)")
         offline_note = QLabel(
-            "Add a local-only offline account for singleplayer testing when "
-            "you do not want to set up Microsoft Azure yet. Offline accounts "
-            "cannot join online servers and do not prove game ownership."
+            "A local-only account for testing worlds without signing in. "
+            "Offline accounts cannot join online servers and do not prove "
+            "game ownership."
         )
         offline_note.setObjectName("Muted")
         offline_note.setWordWrap(True)
@@ -104,43 +113,20 @@ class AccountsPage(QWidget):
         offline.add_layout(offline_row)
         layout.addWidget(offline)
 
-        # -- accounts ------------------------------------------------------
-        card = Card("Saved accounts")
-        self.code_label = QLabel("")
-        self.code_label.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByMouse)
-        self.code_label.setWordWrap(True)
-        self.code_label.setTextFormat(Qt.TextFormat.RichText)
-
-        self.account_list = QListWidget()
-        self._reload()
-
-        buttons = QHBoxLayout()
-        self.login_button = QPushButton("Add Microsoft account")
-        self.login_button.setObjectName("Primary")
-        self.login_button.clicked.connect(self._login)
-        activate = QPushButton("Set active")
-        activate.clicked.connect(self._activate)
-        remove = QPushButton("Remove")
-        remove.setObjectName("Danger")
-        remove.clicked.connect(self._remove)
-        buttons.addWidget(self.login_button)
-        buttons.addWidget(activate)
-        buttons.addWidget(remove)
-        buttons.addStretch(1)
-
-        card.add(self.account_list)
-        card.add_layout(buttons)
-        card.add(self.code_label)
-        layout.addWidget(card)
-
-        note = QLabel(
-            "Dwine uses the official Microsoft device-code flow — the same "
-            "one the vanilla launcher uses. Your password never touches Dwine."
-        )
-        note.setObjectName("Muted")
-        note.setWordWrap(True)
-        layout.addWidget(note)
+        # -- advanced: custom Azure app ------------------------------------
+        advanced = Card("Advanced: your own Azure app (optional)")
+        self.client_id_edit = QLineEdit(get_config().get("auth.client_id", ""))
+        self.client_id_edit.setPlaceholderText(
+            "Azure application (client) ID — leave empty to use the link-code login")
+        self.client_id_edit.editingFinished.connect(self._save_client_id)
+        advanced.add(self.client_id_edit)
+        help_label = QLabel(AZURE_HELP)
+        help_label.setObjectName("Muted")
+        help_label.setWordWrap(True)
+        help_label.setOpenExternalLinks(True)
+        help_label.setTextFormat(Qt.TextFormat.RichText)
+        advanced.add(help_label)
+        layout.addWidget(advanced)
         layout.addStretch(1)
 
         # Worker thread → UI thread hop for the device code.
@@ -152,8 +138,9 @@ class AccountsPage(QWidget):
         value = self.client_id_edit.text().strip()
         get_config().set("auth.client_id", value)
         if value:
-            self.window.notify("Client ID saved — you can sign in now.",
-                               "success")
+            self.window.notify(
+                "Custom Azure client ID saved — sign-ins will use it.",
+                "success")
 
     def _reload(self) -> None:
         self.account_list.clear()
@@ -183,14 +170,6 @@ class AccountsPage(QWidget):
         )
 
     def _login(self) -> None:
-        if not (get_config().get("auth.client_id", "")
-                or os.environ.get("DWINE_MSA_CLIENT_ID")):
-            self.window.notify(
-                "Paste your Azure client ID first (see 'Login setup' above).",
-                "warning")
-            self.client_id_edit.setFocus()
-            return
-
         def show_code(url: str, code: str) -> None:
             # Runs on the worker thread: hand off through the queued signal.
             self.device_code_ready.emit(url, code)
@@ -211,7 +190,7 @@ class AccountsPage(QWidget):
             self.window.notify(f"Login failed: {message}", "error")
 
         self.login_button.setEnabled(False)
-        self.code_label.setText("Requesting a device code from Microsoft …")
+        self.code_label.setText("Requesting a link code from Microsoft …")
         self.window.run_async(do_login, on_done=done, on_error=failed)
 
     def _selected_uuid(self) -> str | None:

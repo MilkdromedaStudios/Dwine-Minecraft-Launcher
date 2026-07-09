@@ -14,22 +14,6 @@ def build(page_id: str, window) -> QWidget:
         from .mods import ModsPage
 
         return ModsPage(window)
-    if page_id == "features":
-        from .features import FeaturesPage
-
-        return FeaturesPage(window)
-    if page_id == "hud":
-        from .hud_editor import HudEditorPage
-
-        return HudEditorPage(window)
-    if page_id == "screenshots":
-        from .screenshots import ScreenshotsPage
-
-        return ScreenshotsPage(window)
-    if page_id == "news":
-        from .news import NewsPage
-
-        return NewsPage(window)
     if page_id == "logs":
         from .logs import LogsPage
 

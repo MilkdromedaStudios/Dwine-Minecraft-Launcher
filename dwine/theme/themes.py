@@ -1,9 +1,8 @@
 """Built-in Dwine themes.
 
-A theme is pure data: the launcher renders it as QSS, and
-:mod:`dwine.theme.mcpack` renders the same palette into an in-game
-resource pack. Users can drop extra ``*.json`` themes into the themes
-directory; they're merged over ``BASE`` so partial themes are fine.
+A theme is pure data the launcher renders as QSS. Users can drop extra
+``*.json`` themes into the themes directory; they're merged over
+``BASE`` so partial themes are fine.
 """
 
 from __future__ import annotations

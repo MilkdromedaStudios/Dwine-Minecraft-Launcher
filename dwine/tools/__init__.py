@@ -1,1 +1,1 @@
-"""Utility tools: cleaner, server ping, screenshots, skins."""
+"""Utility tools: cleaner, server ping."""

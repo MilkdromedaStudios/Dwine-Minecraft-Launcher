@@ -12,7 +12,6 @@ Well-known events:
     game.log            {"profile", "line"}
     mods.installed      {"slug", "version", "file"}
     theme.changed       {"name"}
-    safety.enforced     {"feature", "reason"}
 """
 
 from __future__ import annotations

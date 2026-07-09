@@ -5,21 +5,22 @@ profile. Tokens are refreshed automatically. Dwine never touches
 passwords and never talks to unofficial endpoints, which is part of
 what keeps it ban-safe.
 
-You need an Azure application (client) ID with the
-``XboxLive.signin offline_access`` scope. Creating one is **free**: it
-needs a Microsoft account, not an Azure subscription, and no credit
-card — app registration is part of Microsoft Entra ID's free tier. At
-https://portal.azure.com open Microsoft Entra ID -> App registrations
--> New registration (account type "Personal Microsoft accounts", no
-redirect URI), enable "Allow public client flows" under Authentication,
-then put the Application (client) ID in ``settings.json`` under
-``auth.client_id`` or the ``DWINE_MSA_CLIENT_ID`` environment variable.
-If the portal pushes a free trial / subscription sign-up, skip it — it
-is not required for app registration.
+Two ways to sign in, both device-code ("link code") flows:
 
-New client IDs must also be allow-listed by Mojang once (free form:
-https://aka.ms/mce-reviewappid) before api.minecraftservices.com will
-accept them; until then the final login step returns HTTP 403.
+* **Built-in (default, zero setup).** Dwine uses the official Minecraft
+  launcher's public client ID against Microsoft's consumer OAuth
+  endpoints (``login.live.com``). You get a short code, enter it at
+  https://www.microsoft.com/link, and you're in. This is the same
+  mechanism the vanilla ecosystem (consoles, mineflayer, prismarine)
+  uses — no Azure account, no app registration.
+
+* **Custom Azure app (optional).** If you prefer your auth traffic on
+  your own app registration, set ``auth.client_id`` in ``settings.json``
+  or the ``DWINE_MSA_CLIENT_ID`` environment variable to an Azure
+  application (client) ID with the ``XboxLive.signin offline_access``
+  scope, and Dwine uses it instead. New Azure client IDs must be
+  allow-listed by Mojang once (free form: https://aka.ms/mce-reviewappid)
+  before api.minecraftservices.com accepts them.
 """
 
 from __future__ import annotations
@@ -32,13 +33,27 @@ from typing import Any, Callable
 from ..core.config import get_config
 from ..core.http import session
 
+# -- built-in "link code" flow (no setup) ------------------------------------
+# Public client ID of the official Minecraft launcher; used with
+# Microsoft's consumer device-code endpoints. Verification happens at
+# https://www.microsoft.com/link.
+LINK_CLIENT_ID = "00000000402b5328"
+LINK_DEVICE_CODE_URL = "https://login.live.com/oauth20_connect.srf"
+LINK_TOKEN_URL = "https://login.live.com/oauth20_token.srf"
+LINK_SCOPE = "service::user.auth.xboxlive.com::MBI_SSL"
+
+# -- custom Azure app flow (optional) -----------------------------------------
 DEVICE_CODE_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/devicecode"
 TOKEN_URL = "https://login.microsoftonline.com/consumers/oauth2/v2.0/token"
+SCOPE = "XboxLive.signin offline_access"
+
 XBL_AUTH_URL = "https://user.auth.xboxlive.com/user/authenticate"
 XSTS_AUTH_URL = "https://xsts.auth.xboxlive.com/xsts/authorize"
 MC_LOGIN_URL = "https://api.minecraftservices.com/authentication/login_with_xbox"
 MC_PROFILE_URL = "https://api.minecraftservices.com/minecraft/profile"
-SCOPE = "XboxLive.signin offline_access"
+
+FLOW_LINK = "link"
+FLOW_AZURE = "azure"
 
 
 class AuthError(RuntimeError):
@@ -53,6 +68,7 @@ class Session:
     refresh_token: str
     xuid: str
     expires_at: float
+    flow: str = FLOW_LINK
 
     def as_account(self) -> dict[str, Any]:
         return {
@@ -63,20 +79,20 @@ class Session:
             "xuid": self.xuid,
             "expires_at": self.expires_at,
             "user_type": "msa",
+            "auth_flow": self.flow,
         }
 
 
-def _client_id() -> str:
-    client_id = os.environ.get("DWINE_MSA_CLIENT_ID") or get_config().get(
+def _custom_client_id() -> str:
+    """The user's own Azure app ID, if they configured one ("" otherwise)."""
+    return os.environ.get("DWINE_MSA_CLIENT_ID") or get_config().get(
         "auth.client_id", ""
     )
-    if not client_id:
-        raise AuthError(
-            "No Microsoft client ID configured. Register a free Azure app "
-            "(see dwine/launcher/auth.py docstring) and set auth.client_id "
-            "in settings.json or the DWINE_MSA_CLIENT_ID environment variable."
-        )
-    return client_id
+
+
+def default_flow() -> str:
+    """Link-code flow unless the user brought their own Azure app."""
+    return FLOW_AZURE if _custom_client_id() else FLOW_LINK
 
 
 def _post_json(url: str, **kwargs: Any) -> dict[str, Any]:
@@ -89,13 +105,27 @@ def _post_json(url: str, **kwargs: Any) -> dict[str, Any]:
 def start_device_login(
     on_code: Callable[[str, str], None],
     poll_timeout: int = 900,
+    flow: str | None = None,
 ) -> Session:
     """Interactive login. ``on_code(verification_url, user_code)`` shows the prompt."""
-    client_id = _client_id()
+    flow = flow or default_flow()
+    if flow == FLOW_LINK:
+        client_id = LINK_CLIENT_ID
+        device_url, token_url, scope = LINK_DEVICE_CODE_URL, LINK_TOKEN_URL, LINK_SCOPE
+        request = {"client_id": client_id, "scope": scope,
+                   "response_type": "device_code"}
+    else:
+        client_id = _custom_client_id()
+        if not client_id:
+            raise AuthError(
+                "No Azure client ID configured — use the built-in link-code "
+                "login, or set auth.client_id / DWINE_MSA_CLIENT_ID."
+            )
+        device_url, token_url, scope = DEVICE_CODE_URL, TOKEN_URL, SCOPE
+        request = {"client_id": client_id, "scope": scope}
+
     try:
-        device = _post_json(
-            DEVICE_CODE_URL, data={"client_id": client_id, "scope": SCOPE}
-        )
+        device = _post_json(device_url, data=request)
     except AuthError as exc:
         if "unauthorized_client" in str(exc) or "invalid_client" in str(exc):
             raise AuthError(
@@ -111,7 +141,7 @@ def start_device_login(
     while time.time() < deadline:
         time.sleep(interval)
         resp = session().post(
-            TOKEN_URL,
+            token_url,
             data={
                 "client_id": client_id,
                 "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
@@ -124,7 +154,7 @@ def start_device_login(
         except ValueError:  # transient gateway hiccup: keep polling
             continue
         if resp.status_code == 200:
-            return _finish_microsoft_login(body)
+            return _finish_microsoft_login(body, flow)
         error = body.get("error", "")
         if error in ("authorization_pending", "slow_down"):
             if error == "slow_down":
@@ -138,30 +168,42 @@ def start_device_login(
     raise AuthError("Login timed out — the code was never entered.")
 
 
-def refresh(refresh_token: str) -> Session:
+def refresh(refresh_token: str, flow: str = FLOW_LINK) -> Session:
+    if flow == FLOW_AZURE:
+        token_url, client_id, scope = TOKEN_URL, _custom_client_id(), SCOPE
+        if not client_id:
+            raise AuthError(
+                "This account was added with a custom Azure app, but no "
+                "auth.client_id is configured any more — sign in again."
+            )
+    else:
+        token_url, client_id, scope = LINK_TOKEN_URL, LINK_CLIENT_ID, LINK_SCOPE
     body = _post_json(
-        TOKEN_URL,
+        token_url,
         data={
-            "client_id": _client_id(),
+            "client_id": client_id,
             "grant_type": "refresh_token",
             "refresh_token": refresh_token,
-            "scope": SCOPE,
+            "scope": scope,
         },
     )
-    return _finish_microsoft_login(body)
+    return _finish_microsoft_login(body, flow)
 
 
-def _finish_microsoft_login(ms_tokens: dict[str, Any]) -> Session:
+def _finish_microsoft_login(ms_tokens: dict[str, Any], flow: str) -> Session:
     ms_access = ms_tokens["access_token"]
     ms_refresh = ms_tokens.get("refresh_token", "")
 
+    # Azure AAD tokens are presented to Xbox Live with a "d=" prefix,
+    # legacy consumer (login.live.com) tokens with "t=".
+    rps_prefix = "d" if flow == FLOW_AZURE else "t"
     xbl = _post_json(
         XBL_AUTH_URL,
         json={
             "Properties": {
                 "AuthMethod": "RPS",
                 "SiteName": "user.auth.xboxlive.com",
-                "RpsTicket": f"d={ms_access}",
+                "RpsTicket": f"{rps_prefix}={ms_access}",
             },
             "RelyingParty": "http://auth.xboxlive.com",
             "TokenType": "JWT",
@@ -200,9 +242,9 @@ def _finish_microsoft_login(ms_tokens: dict[str, Any]) -> Session:
         if f"{MC_LOGIN_URL} -> 403" in str(exc):
             raise AuthError(
                 "Minecraft services refused this client ID (HTTP 403). "
-                "New Azure app IDs must be allow-listed by Mojang once — "
-                "submit the free form at https://aka.ms/mce-reviewappid "
-                "and try again after the confirmation email."
+                "Custom Azure app IDs must be allow-listed by Mojang once — "
+                "submit the free form at https://aka.ms/mce-reviewappid, or "
+                "just use the built-in link-code login."
             ) from exc
         raise
     mc_token = mc["access_token"]
@@ -227,6 +269,7 @@ def _finish_microsoft_login(ms_tokens: dict[str, Any]) -> Session:
         refresh_token=ms_refresh,
         xuid=xuid,
         expires_at=expires_at,
+        flow=flow,
     )
 
 

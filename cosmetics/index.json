@@ -1,8 +1,0 @@
-{
-  "items": [
-    { "id": "dwine-classic", "name": "Dwine Classic", "kind": "cape" },
-    { "id": "nebula", "name": "Nebula", "kind": "cape" },
-    { "id": "ember", "name": "Ember", "kind": "cape" },
-    { "id": "circuit", "name": "Circuit", "kind": "cape" }
-  ]
-}

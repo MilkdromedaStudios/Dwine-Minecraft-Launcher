@@ -1,11 +1,15 @@
-"""Mods & Packs: Modrinth search, one-click installs, updates.
+"""Mods & Packs: the mod manager.
 
-Everything installs from Modrinth's official API with sha512
-verification. The profile list refreshes every time the page is shown,
-so profiles created on Home (or from the CLI) appear immediately.
+Search Modrinth, install with one click (dependencies resolved), see
+exactly what's installed, remove or update it. Everything installs from
+Modrinth's official API with sha512 verification. The profile list
+refreshes every time the page is shown, so profiles created on Home (or
+from the CLI) appear immediately.
 """
 
 from __future__ import annotations
+
+from pathlib import Path
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
@@ -33,6 +37,7 @@ class ModsPage(QWidget):
         super().__init__()
         self.window = window
         self.store = ProfileStore()
+        self._installed_reloaders: list = []
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(32, 28, 32, 28)
@@ -43,6 +48,8 @@ class ModsPage(QWidget):
         self.profile_box = QComboBox()
         top.addWidget(self.profile_box, 1)
         self.reload_profiles()
+        self.profile_box.currentIndexChanged.connect(
+            lambda _i: self.reload_installed())
         layout.addLayout(top)
 
         tabs = QTabWidget()
@@ -62,9 +69,14 @@ class ModsPage(QWidget):
             if profile.slug == current:
                 self.profile_box.setCurrentIndex(self.profile_box.count() - 1)
 
+    def reload_installed(self) -> None:
+        for reload in self._installed_reloaders:
+            reload()
+
     def showEvent(self, event) -> None:  # noqa: N802
         super().showEvent(event)
         self.reload_profiles()
+        self.reload_installed()
 
     def _profile(self):
         slug = self.profile_box.currentData()
@@ -82,11 +94,14 @@ class ModsPage(QWidget):
             return ResourcePackManager(profile)
         return ShaderManager(profile)
 
+    # ------------------------------------------------------------------
+
     def _content_tab(self, kind: str) -> QWidget:
         page = QWidget()
         layout = QVBoxLayout(page)
         layout.setContentsMargins(0, 12, 0, 0)
 
+        # -- search ------------------------------------------------------
         search_row = QHBoxLayout()
         search = QLineEdit()
         search.setPlaceholderText(f"Search Modrinth {kind}s …")
@@ -107,10 +122,12 @@ class ModsPage(QWidget):
             button.setEnabled(False)
 
             def do():
+                # effective_version() may hit the network (latest-release
+                # lookup), so it belongs here on the worker thread.
                 return modrinth.search(
                     query,
                     project_type=kind,
-                    game_version=profile.version or None,
+                    game_version=profile.effective_version(),
                     loader=profile.loader if kind == "mod" and
                     profile.loader != "vanilla" else None,
                 )
@@ -146,11 +163,42 @@ class ModsPage(QWidget):
         search_row.addWidget(button)
         layout.addLayout(search_row)
         layout.addWidget(status)
-        layout.addWidget(results, 1)
+        layout.addWidget(results, 2)
 
         actions = QHBoxLayout()
         install = QPushButton("Install selected")
         install.setObjectName("Primary")
+
+        # -- installed -----------------------------------------------------
+        installed_label = QLabel("Installed")
+        installed_label.setObjectName("CardTitle")
+        installed_list = QListWidget()
+
+        def reload_installed() -> None:
+            installed_list.clear()
+            try:
+                profile = self._profile()
+            except Exception:  # noqa: BLE001 - empty list beats a crash here
+                return
+            if kind == "mod":
+                manager = ModManager(profile)
+                for slug, entry in sorted(manager.installed().items()):
+                    item = QListWidgetItem(
+                        f"{slug}  ·  {entry.get('version', '?')}")
+                    item.setData(Qt.ItemDataRole.UserRole, ("slug", slug))
+                    installed_list.addItem(item)
+                for jar in manager.orphaned_jars():
+                    item = QListWidgetItem(f"{jar.name}  ·  added manually")
+                    item.setData(Qt.ItemDataRole.UserRole, ("file", str(jar)))
+                    installed_list.addItem(item)
+            else:
+                manager = self._manager(kind, profile)
+                for path in manager.list():
+                    item = QListWidgetItem(path.name)
+                    item.setData(Qt.ItemDataRole.UserRole, ("name", path.name))
+                    installed_list.addItem(item)
+
+        self._installed_reloaders.append(reload_installed)
 
         def do_install() -> None:
             item = results.currentItem()
@@ -173,6 +221,7 @@ class ModsPage(QWidget):
 
             def done(_result) -> None:
                 install.setEnabled(True)
+                reload_installed()
                 self.window.notify(
                     f"Installed {slug} into {profile.name}", "success")
 
@@ -182,6 +231,26 @@ class ModsPage(QWidget):
 
             self.window.run_async(lambda: manager.install(slug),
                                   on_done=done, on_error=failed)
+
+        def do_remove() -> None:
+            item = installed_list.currentItem()
+            if not item:
+                self.window.notify("Select an installed entry first.", "info")
+                return
+            ref_kind, ref = item.data(Qt.ItemDataRole.UserRole)
+            try:
+                profile = self._profile()
+            except Exception as exc:  # noqa: BLE001
+                self.window.notify(str(exc), "error")
+                return
+            if ref_kind == "slug":
+                ModManager(profile).remove(ref)
+            elif ref_kind == "file":
+                Path(ref).unlink(missing_ok=True)
+            else:
+                self._manager(kind, profile).remove(ref)
+            reload_installed()
+            self.window.notify("Removed.", "success")
 
         install.clicked.connect(do_install)
         results.itemDoubleClicked.connect(lambda _item: do_install())
@@ -197,18 +266,35 @@ class ModsPage(QWidget):
                     self.window.notify(str(exc), "error")
                     return
                 manager = ModManager(profile)
-                self.window.run_async(
-                    manager.update_all,
-                    on_done=lambda changed: self.window.notify(
+                update_all.setEnabled(False)
+
+                def done(changed) -> None:
+                    update_all.setEnabled(True)
+                    reload_installed()
+                    self.window.notify(
                         f"Updated {len(changed)} mod(s)"
                         if changed else "Everything already up to date",
                         "success",
-                    ),
-                )
+                    )
+
+                def failed(message: str) -> None:
+                    update_all.setEnabled(True)
+                    self.window.notify(f"Update failed: {message}", "error")
+
+                self.window.run_async(manager.update_all,
+                                      on_done=done, on_error=failed)
 
             update_all.clicked.connect(do_update)
             actions.addWidget(update_all)
 
+        remove_button = QPushButton("Remove selected")
+        remove_button.setObjectName("Danger")
+        remove_button.clicked.connect(do_remove)
+        actions.addWidget(remove_button)
         actions.addStretch(1)
+
+        layout.addWidget(installed_label)
+        layout.addWidget(installed_list, 1)
         layout.addLayout(actions)
+        reload_installed()
         return page

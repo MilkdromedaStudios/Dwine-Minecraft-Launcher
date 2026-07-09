@@ -34,12 +34,25 @@ class Profile:
     jvm_args: list[str] = field(default_factory=list)
     memory_mb: int = 0  # 0 = inherit global setting
     server: str = ""  # one-click join target ("" = main menu)
-    features: dict[str, Any] = field(default_factory=dict)
     description: str = ""
 
     @property
     def slug(self) -> str:
         return _slugify(self.name)
+
+    def effective_version(self) -> str:
+        """The concrete Minecraft version this profile runs.
+
+        ``version == ""`` means "latest release", which must be resolved
+        to a real id before asking Modrinth for compatible builds —
+        otherwise mods are matched against no version at all and the
+        newest (possibly incompatible) build wins.
+        """
+        if self.version:
+            return self.version
+        from . import manifest
+
+        return manifest.latest_release()
 
     @property
     def game_dir(self) -> Path:

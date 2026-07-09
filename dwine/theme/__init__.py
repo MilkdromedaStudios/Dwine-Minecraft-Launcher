@@ -1,1 +1,1 @@
-"""Theme engine: one theme definition skins both the launcher and the game."""
+"""Theme engine: JSON theme definitions rendered as the launcher's QSS."""

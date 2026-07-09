@@ -23,7 +23,7 @@ class ShaderManager:
         return modrinth.search(
             query,
             project_type="shader",
-            game_version=self.profile.version,
+            game_version=self.profile.effective_version(),
             limit=limit,
         )
 
@@ -32,10 +32,11 @@ class ShaderManager:
             ModManager(self.profile).install("iris")
 
     def install(self, slug: str, ensure_loader_mod: bool = True) -> Path:
-        version = modrinth.best_version(slug, game_version=self.profile.version)
+        game_version = self.profile.effective_version()
+        version = modrinth.best_version(slug, game_version=game_version)
         if version is None:
             raise LookupError(
-                f"{slug!r} has no build for Minecraft {self.profile.version}"
+                f"{slug!r} has no build for Minecraft {game_version}"
             )
         if ensure_loader_mod:
             self.ensure_iris()

@@ -1,13 +1,12 @@
-"""Dwine — a next-generation, fully legitimate Minecraft client + launcher.
+"""Dwine — a lean, fully legitimate Minecraft launcher for modded play.
 
-Dwine is a Python-powered launcher and client experience layer:
+Dwine does four things and does them well:
 
 * Installs and launches every Minecraft version (Vanilla, Fabric, Quilt, Forge).
-* Curates and installs vetted, rule-compliant mods from Modrinth.
-* Re-themes Minecraft's own UI through a generated resource pack.
-* Ships a sleek PySide6 launcher UI with a full theme engine.
+* Manages client mods, resource packs and shaders from Modrinth's official API.
+* Signs you in with a Microsoft link code — no Azure setup required.
+* Wraps it in a small PySide6 launcher UI with a Play button.
 
-Everything Dwine does is client-side, cosmetic, or quality-of-life.
 No cheats. No packet manipulation. No unfair advantage. Ever.
 """
 

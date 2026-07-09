@@ -24,7 +24,6 @@ DEFAULTS: dict[str, Any] = {
         "name": "dwine-dark",
         "background": {"image": "", "animated": True, "blur": 12},
         "accent": "",  # empty = use theme accent
-        "apply_in_game": True,  # generate + attach the Dwine resource pack
     },
     "launcher": {
         "keep_open_while_playing": True,
@@ -44,27 +43,10 @@ DEFAULTS: dict[str, Any] = {
         "java_path": "",  # empty = auto-discover / managed runtime
     },
     "performance": {
-        "preset": "balanced",  # potato | balanced | quality | custom
-        "install_optimization_mods": True,
         "auto_clean": {"enabled": True, "max_log_age_days": 14, "max_cache_mb": 2048},
     },
-    "features": {},  # per-feature enabled/options map, filled by features.registry
-    "hud": {"layout": "default"},
-    "crosshair": {"preset": "default"},
-    "safety": {
-        "respect_server_rules": True,  # hard policy switch; see features.safety
-        "disable_restricted_on_multiplayer": True,
-    },
-    "integrations": {
-        "discord_rpc": True,
-        "spotify": {"enabled": False, "client_id": ""},
-    },
     "auth": {
-        "client_id": "",  # Azure application (client) ID for Microsoft login
-    },
-    "sync": {"enabled": False, "folder": ""},
-    "news": {
-        "feed_url": "https://raw.githubusercontent.com/MilkdromedaStudios/Dwine/main/news/feed.json",
+        "client_id": "",  # optional custom Azure app for Microsoft login
     },
 }
 

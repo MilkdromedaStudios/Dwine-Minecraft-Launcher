@@ -1,28 +1,8 @@
-"""Tools: HUD model, varint protocol, cleaner, plugins."""
+"""Tools: varint protocol, cleaner, plugins, CLI parser."""
 
 import time
 
-import pytest
-
-from dwine.features.hud import ANCHORS, HudElement, HudLayout, default_layout
 from dwine.tools.ping import pack_varint, read_varint
-
-
-def test_hud_layout_roundtrip(tmp_path):
-    layout = default_layout()
-    layout.add(HudElement("cps", anchor="bottom_center", offset_x=0, offset_y=-40))
-    saved = layout.save(tmp_path)
-    assert saved.exists()
-    loaded = HudLayout.load(tmp_path)
-    assert {e.type for e in loaded.elements} == {e.type for e in layout.elements}
-
-
-def test_hud_element_validation():
-    with pytest.raises(ValueError):
-        HudElement("fps", anchor="nowhere")
-    with pytest.raises(ValueError):
-        HudElement("not_a_real_element")
-    assert len(ANCHORS) == 9
 
 
 def test_varint_roundtrip():
