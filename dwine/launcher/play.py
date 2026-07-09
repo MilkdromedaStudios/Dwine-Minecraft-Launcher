@@ -4,17 +4,18 @@
 2. Install/verify the version, libraries, assets, natives
 3. Apply the safety policy for the launch target (see features.safety)
 4. Sync feature mods to the effective feature set
-5. Render the Dwine theme resource pack + HUD/crosshair configs
+5. Write the feature + HUD + crosshair configs the companion mod renders
+   in game, and the Dwine theme resource pack
 6. Launch, streaming logs onto the event bus
 """
 
 from __future__ import annotations
 
+import json
 import subprocess
 from typing import Any
 
 from ..content.mods import ModManager
-from ..content.presets import install_preset
 from ..core.config import get_config
 from ..core.events import bus
 from ..features import registry, safety
@@ -27,18 +28,27 @@ from .loaders import ensure_loader
 from .profiles import Profile
 
 
-def prepare(profile: Profile, sync_mods: bool = True) -> dict[str, Any]:
+def prepare(profile: Profile) -> dict[str, Any]:
     """Install everything the profile needs; returns merged version JSON."""
     mc_version = profile.version or manifest.latest_release()
     if not profile.version:
         profile.version = mc_version
 
     version_id = ensure_loader(profile.loader, mc_version, profile.loader_version)
-    version_data = install.install_version(version_id)
+    return install.install_version(version_id)
 
-    if sync_mods and profile.content_preset:
-        install_preset(profile, profile.content_preset)
-    return version_data
+
+def _write_feature_config(profile: Profile, enabled: dict[str, bool]) -> None:
+    """Write the safety-enforced feature state for the companion mod.
+
+    This is what makes every Dwine feature *in-game* rather than a
+    launcher gimmick: the companion mod reads this file and renders the
+    HUD, visual and chat features with exactly the settings chosen here.
+    """
+    target = profile.game_dir / "config" / "dwine" / "features.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    payload = registry.export_game_config(get_config(), enabled)
+    target.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
 def _sync_feature_mods(profile: Profile, enabled: dict[str, bool], server: str | None) -> None:
@@ -113,6 +123,7 @@ def launch_profile(
         )
 
     _sync_feature_mods(profile, enabled, server)
+    _write_feature_config(profile, enabled)
     _apply_theme(profile)
 
     cfg = get_config()

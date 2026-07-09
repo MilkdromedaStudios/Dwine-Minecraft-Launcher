@@ -2,15 +2,21 @@
 
 The generated PNG is injected into the Dwine theme resource pack, so the
 custom crosshair works on every version and server — it's just a texture.
+
+Two modes:
+
+* parametric — pick a ``shape`` and tune thickness/gap/color;
+* drawpad — ``shape="custom"``: every pixel you painted in the drawpad
+  is stored in ``pixels`` as ``{"x,y": "#RRGGBB"}`` and rendered 1:1.
 """
 
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-SHAPES = ("cross", "dot", "circle", "square", "plus_dot", "chevron")
+SHAPES = ("cross", "dot", "circle", "square", "plus_dot", "chevron", "custom")
 
 
 @dataclass
@@ -24,11 +30,22 @@ class Crosshair:
     outline: bool = True
     outline_color: str = "#000000"
     animated: bool = False  # subtle pulse via mcmeta animation frames
+    # drawpad pixels for shape="custom": {"x,y": "#RRGGBB"}
+    pixels: dict[str, str] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if self.shape not in SHAPES:
             raise ValueError(f"unknown shape {self.shape!r}; expected one of {SHAPES}")
         self.size = max(7, min(31, int(self.size)))
+        cleaned: dict[str, str] = {}
+        for key, value in (self.pixels or {}).items():
+            try:
+                x, y = (int(part) for part in str(key).split(","))
+            except ValueError:
+                continue
+            if 0 <= x < self.size and 0 <= y < self.size:
+                cleaned[f"{x},{y}"] = str(value)
+        self.pixels = cleaned
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -57,6 +74,19 @@ class Crosshair:
         if self.outline:
             oc = self.outline_color.lstrip("#")
             outline_rgba = tuple(int(oc[i : i + 2], 16) for i in (0, 2, 4)) + (rgba[3],)
+
+        if self.shape == "custom":
+            alpha = max(0, min(255, self.opacity))
+            for key, hex_color in self.pixels.items():
+                x, y = (int(part) for part in key.split(","))
+                value = hex_color.lstrip("#")
+                r, g, b = (int(value[i : i + 2], 16) for i in (0, 2, 4))
+                a = int(value[6:8], 16) if len(value) >= 8 else alpha
+                draw.rectangle(
+                    (x * scale, y * scale, (x + 1) * scale - 1, (y + 1) * scale - 1),
+                    fill=(r, g, b, a),
+                )
+            return image
 
         center = px // 2
         thick = max(1, self.thickness * scale)

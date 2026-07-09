@@ -40,11 +40,11 @@ in a launcher that's genuinely pleasant to look at.
 ## Feature tour
 
 ### 🎨 UI & theming — outside *and inside* the game
+- The launcher itself stays minimal: **themes, profiles, accounts — no preset bloat**. The features live in the game, not in launcher menus
 - Six built-in themes — **Dwine Dark, Light, Neon, Minimal, Glass, Ember** — plus JSON custom themes with gradients, glass panels and animated accents
 - **In-game theming with zero injection**: on every launch Dwine renders your theme into the `Dwine Theme` resource pack — buttons, hotbar, menu backgrounds and crosshair — legal on every server, working on every version (legacy `widgets.png` *and* modern 1.20.2+ sprites with nine-slice metadata)
-- **Drag-and-drop HUD editor** with nine-anchor snapping so layouts scale to any resolution
-- **Parametric crosshair editor**: six shapes, color, gap, thickness, outline, presets
-- Custom notification system, animated toggles, custom widgets throughout
+- **Drag-and-drop HUD editor** with nine-anchor snapping — in the launcher *and* in game (companion mod, `RSHIFT` by default)
+- **Crosshair drawpad**: paint your own crosshair pixel by pixel (plus parametric shapes as starting points), rendered into the theme pack
 
 ![In-game widgets](assets/screenshots/ingame-widgets.png)
 *The same three themes rendered as in-game button/hotbar textures by `dwine theme build`.*
@@ -56,21 +56,29 @@ in a launcher that's genuinely pleasant to look at.
 - Auto-cleaner for logs, crash reports and download caches with a size budget
 - Parallel, checksum-verified downloads for versions, libraries and assets
 
-### 🧩 Built-in features (all legit)
-Every toggle is cosmetic or quality-of-life — information display, comfort, style:
+### 🧩 100+ built-in features (all legit, all with settings)
+Every toggle is cosmetic or quality-of-life — information display, comfort,
+style — and **every feature has its own settings** (the ⚙ button next to
+each toggle): sliders, colors, styles, keybinds. All of it is written into
+the profile's `config/dwine/` at launch and rendered **in game** by the
+companion mod — the launcher is just the remote control.
 
-**HUD** keystrokes · FPS/ping/CPS/memory · armor & status · saturation · compass · coordinates · clock · biome
-**Visual** item physics · item resize · motion blur · hit color · custom animations · particle customizer · fullbright · custom crosshair
-**Utility** zoom · toggle sprint · minimap + waypoints · death waypoints · skip death screen · friend guard · screenshot manager · replay (Replay Mod)
-**Hypixel** Skyblock utilities (waypoints, dungeon map, timers, trackers) · level head · Auto GG · nick hider · party HUD · scoreboard restyling
+**HUD** Keystrokes (colors, mouse/spacebar, CPS-on-keys) · FPS counter · CPS counter · ping display · coordinates (Nether-converted, biome) · clock (real/in-game) · compass ribbon · armor HUD · potion HUD · direction HUD · speed HUD · stopwatch · combo counter · hit delay indicator · block hit delay · hit distance display · saturation (AppleSkin) · server info · match timer · memory/session stats · FPS graph · chunk graph
+**Visual** custom crosshair + drawpad · crosshair animations & movement · entity/block hitboxes (thickness + color sliders) · better block outline (thickness, color, style) · block selection highlight · block overlay · block break overlay · chunk borders · light overlay · mob health & nameplates · arrow trajectories & projectile path (auto-off on competitive) · hit color · damage tint · damage particles · better particles (amount slider) · swing/old animations · wavey capes & skins · motion blur · cooldown indicator · custom fonts · custom colors · item physics
+**Chat** transparent chat (opacity sliders) · chat scale/width/height sliders · chat animations · chat filter · time stamps · chat heads · better tab list · AutoGG
+**Interface** in-game HUD editor (moveable everything, scale + opacity + backgrounds) · scoreboard customizer (+position) · bossbar customizer (+position) · hotbar customizer (+position) · inventory blur & animations · menu blur · menu shader
+**Utility** ToggleSprint · ToggleSneak · zoom · smooth camera · fullbright + gamma slider · time changer (visual) · weather toggle · minimap + waypoints · skip death screen · friend guard · screenshot manager · replay (Replay Mod)
+**Performance** FPS boost stack · memory cleaner · entity/particle/chunk culling · shadow toggle · VSync toggle · anti-aliasing · mipmap slider · fog toggle · render distance & simulation sliders · entity distance slider · animation toggles · dynamic FPS · multi-threaded chunks · Iris shaders
+**Hypixel** Skyblock utilities (waypoints, dungeon map, timers, trackers) · level head · Bedwars timers · nick hider · party HUD
 **Media** Spotify miniplayer · Discord Rich Presence · free cosmetic capes
 
 ![Features](assets/screenshots/features-ember.png)
 
 ### 🧭 The launcher
-- Microsoft login via the official device-code flow (your password never touches Dwine), multi-account switching, automatic token refresh
-- Isolated **profiles** with one-click presets: `FPS`, `PvP`, `Skyblock`, `Cinematic` — each with its own mods, packs, shaders and worlds
-- Mod / resource pack / shader managers with search, one-click install, dependency resolution and **Update All**
+- Microsoft login via the official device-code flow (your password never touches Dwine), multi-account switching, automatic token refresh — with the Azure client-ID setup built into the Accounts page
+- **Version chooser**: every Minecraft version ever shipped — releases, snapshots, old beta/alpha — with a loader picker (Vanilla / Fabric / Quilt / Forge), right on the Home tab
+- Isolated **profiles** — each with its own mods, packs, shaders and worlds. No presets: you pick the name, version and loader
+- Mod / resource pack / shader managers with Modrinth search, one-click install, dependency resolution and **Update All**
 - One-click server join, server ping tester (a real Server List Ping implementation)
 - Crash analyzer that turns stack traces into plain-English fixes
 - News panel, patch notes, screenshot gallery + editor, live logs viewer
@@ -116,22 +124,6 @@ python -m dwine setup-path
 dwine
 ```
 
-If your terminal still says `dwine: command not found`, add one PATH entry.
-Environment-variable editors usually ask for only a variable **name** and a
-folder **path/value**:
-
-| System | Variable name | Path/value to add |
-| --- | --- | --- |
-| Windows | `Path` | `%APPDATA%\Python\Scripts` |
-| macOS / Linux | `PATH` | `$HOME/.local/bin` |
-
-Then reopen your terminal and run `dwine` again.
-# If prompted, add the printed folder to the PATH environment variable,
-# then reopen your terminal.
-dwine
-```
-
-
 From source instead:
 
 ```bash
@@ -142,13 +134,73 @@ python -m dwine setup-path
 dwine
 ```
 
-First run:
+### Making `dwine` work in your terminal
 
-1. **Accounts → Add Microsoft account** — you'll get a code to enter at
-   microsoft.com/link. One-time setup: Microsoft requires launchers to bring
-   their own (free) Azure app ID — create one and set `auth.client_id`
-   ([how-to in `dwine/launcher/auth.py`](dwine/launcher/auth.py)).
-2. **Home → + New profile** — creates the four starter profiles.
+`python -m dwine setup-path` installs a tiny launcher script (a "shim")
+into a per-user folder and prints its exact location. If typing `dwine`
+already works afterwards, you're done. If your terminal says
+`dwine: command not found`, that folder isn't on your PATH yet — add it
+once and it works forever:
+
+**Where the shim lives**
+
+| System | Shim file | Folder to put on PATH |
+| --- | --- | --- |
+| Windows | `%APPDATA%\Python\Scripts\dwine.cmd` | `%APPDATA%\Python\Scripts` |
+| macOS / Linux | `~/.local/bin/dwine` | `$HOME/.local/bin` |
+
+**Windows (GUI, recommended)**
+
+1. Press the Windows key, type *"environment variables"*, open
+   **Edit the system environment variables** → **Environment Variables…**
+2. Under **User variables**, select `Path` → **Edit** → **New**.
+3. Paste `%APPDATA%\Python\Scripts` and press **OK** on every dialog.
+4. Close and reopen your terminal, then run `dwine --version`.
+
+**Windows (PowerShell one-liner)**
+
+```powershell
+[Environment]::SetEnvironmentVariable('Path', [Environment]::GetEnvironmentVariable('Path','User') + ';' + $env:APPDATA + '\Python\Scripts', 'User')
+```
+
+Then open a *new* terminal window.
+
+**macOS (zsh — the default shell)**
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+dwine --version
+```
+
+**Linux (bash)**
+
+```bash
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+dwine --version
+```
+
+**Troubleshooting**
+
+- Nothing happens / old version runs → a *new* terminal window is required
+  after editing PATH; already-open windows keep the old value.
+- `python -m dwine` works but `dwine` doesn't → the PATH entry is missing or
+  misspelled; run `python -m dwine setup-path` again, it prints the exact
+  folder and line to add.
+- Multiple Pythons installed → the shim pins the Python that installed
+  Dwine, so it keeps working even if `python` later points somewhere else.
+
+### First run
+
+1. **Accounts → Login setup** — paste your (free) Azure app client ID.
+   Microsoft requires every launcher to bring its own; the Accounts page
+   walks you through the ~5-minute registration, or see the docstring in
+   [`dwine/launcher/auth.py`](dwine/launcher/auth.py). Then
+   **Add Microsoft account** — your browser opens with a code, and the
+   launcher finishes by itself. (CLI: `dwine login --client-id <ID>`.)
+2. **Home** — pick any Minecraft version and loader in the version chooser
+   (or **+ New profile** for a fresh one — name, version, loader, done).
 3. **Play.** Dwine installs the version, loader, mods and theme pack, then
    launches.
 
@@ -158,16 +210,16 @@ Everything works without a display:
 
 ```bash
 dwine versions                          # list Minecraft versions
+dwine versions --snapshots --old        # …including snapshots + beta/alpha
 dwine install 1.21.1 --loader fabric    # install any version + loader
-dwine login                             # Microsoft device-code login
-dwine launch fps-mode --server play.example.com
-dwine mods search sodium --profile fps-mode
-dwine mods preset performance --profile fps-mode
+dwine login --client-id <AZURE_ID>      # save your client ID + device login
+dwine launch my-profile --server play.example.com
+dwine mods search sodium --profile my-profile
 dwine theme set neon                    # six built-in themes
 dwine theme build neon --mc 1.21       # render the in-game pack anywhere
 dwine ping mc.hypixel.net               # real SLP ping tester
 dwine clean --apply                     # sweep logs/caches
-dwine crash fps-mode                    # analyze the last crash
+dwine crash my-profile                  # analyze the last crash
 dwine safety                            # run the feature-catalog audit
 dwine sync push                         # settings snapshot to your sync folder
 dwine update --check                    # check GitHub for a Dwine release
@@ -182,7 +234,7 @@ dwine/
 ├── core/          settings JSON system · event bus · HTTP w/ sha verification
 ├── launcher/      Mojang manifest · installer · Fabric/Quilt/Forge · MS auth
 │                  profiles · Java runtimes · crash analyzer · news · updates
-├── content/       Modrinth client · mod/pack/shader managers · presets
+├── content/       Modrinth client · mod/pack/shader managers
 ├── features/      feature catalog · SAFETY POLICY · HUD model · crosshair
 ├── theme/         theme definitions · Qt stylesheet engine · in-game pack gen
 ├── ui/            PySide6 launcher (custom widgets, 9 pages)

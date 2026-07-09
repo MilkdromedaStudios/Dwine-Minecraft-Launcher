@@ -213,6 +213,44 @@ class SettingRow(QWidget):
         row.addWidget(control, 0, Qt.AlignmentFlag.AlignRight)
 
 
+class ColorButton(QFrame):
+    """A small swatch that opens a color dialog when clicked."""
+
+    changed = Signal(str)
+
+    def __init__(self, color: str = "#FFFFFF", parent: QWidget | None = None):
+        super().__init__(parent)
+        self._color = QColor(color)
+        self.setFixedSize(54, 26)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Pick a color")
+
+    def color(self) -> str:
+        return self._color.name().upper()
+
+    def set_color(self, color: str) -> None:
+        self._color = QColor(color)
+        self.update()
+
+    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
+        if event.button() == Qt.MouseButton.LeftButton:
+            from PySide6.QtWidgets import QColorDialog
+
+            picked = QColorDialog.getColor(self._color, self, "Pick a color")
+            if picked.isValid():
+                self._color = picked
+                self.update()
+                self.changed.emit(self.color())
+        super().mouseReleaseEvent(event)
+
+    def paintEvent(self, _event) -> None:  # noqa: N802
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setBrush(self._color)
+        painter.setPen(QPen(QColor("#5A6472"), 1))
+        painter.drawRoundedRect(1, 1, 52, 24, 6, 6)
+
+
 class ColorSwatch(QFrame):
     """Clickable color square used by the crosshair/theme editors."""
 

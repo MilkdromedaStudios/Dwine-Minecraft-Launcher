@@ -1,7 +1,9 @@
-"""Profiles: named, isolated game setups (FPS mode, PvP mode, Skyblock mode...).
+"""Profiles: named, isolated game setups.
 
 Each profile owns its own game directory (worlds, servers.dat, options.txt,
 mods, resource packs, shaders) so switching setups is instant and clean.
+There are no preset profiles — you pick the name, Minecraft version and
+loader yourself in the version chooser.
 """
 
 from __future__ import annotations
@@ -15,33 +17,6 @@ from pathlib import Path
 from typing import Any
 
 from ..core import paths
-
-BUILTIN_PRESETS: dict[str, dict[str, Any]] = {
-    "fps": {
-        "display_name": "FPS Mode",
-        "loader": "fabric",
-        "content_preset": "performance",
-        "description": "Maximum frames: Sodium, Lithium and friends, minimal HUD.",
-    },
-    "pvp": {
-        "display_name": "PvP Mode",
-        "loader": "fabric",
-        "content_preset": "pvp",
-        "description": "Crisp hits: keystrokes, CPS, ping, sprint toggle, low latency.",
-    },
-    "skyblock": {
-        "display_name": "Skyblock Mode",
-        "loader": "forge",
-        "content_preset": "skyblock",
-        "description": "Hypixel Skyblock QoL: maps, timers, trackers — all rule-compliant.",
-    },
-    "cinematic": {
-        "display_name": "Cinematic Mode",
-        "loader": "fabric",
-        "content_preset": "shaders",
-        "description": "Iris + shaders, replay-friendly, motion blur.",
-    },
-}
 
 
 def _slugify(name: str) -> str:
@@ -59,7 +34,6 @@ class Profile:
     jvm_args: list[str] = field(default_factory=list)
     memory_mb: int = 0  # 0 = inherit global setting
     server: str = ""  # one-click join target ("" = main menu)
-    content_preset: str = ""
     features: dict[str, Any] = field(default_factory=dict)
     description: str = ""
 
@@ -129,14 +103,16 @@ class ProfileStore:
     def exists(self, name_or_slug: str) -> bool:
         return self._path(_slugify(name_or_slug)).exists()
 
-    def create_from_preset(self, preset: str, version: str, name: str = "") -> Profile:
-        spec = BUILTIN_PRESETS[preset]
+    def ensure_default(self) -> Profile:
+        """Guarantee at least one profile exists; returns the first one."""
+        profiles = self.list()
+        if profiles:
+            return profiles[0]
         profile = Profile(
-            name=name or spec["display_name"],
-            version=version,
-            loader=spec["loader"],
-            content_preset=spec["content_preset"],
-            description=spec["description"],
+            name="Default",
+            version="",  # latest release
+            loader="fabric",
+            description="Your first profile — pick any version and loader on Home.",
         )
         self.save(profile)
         return profile

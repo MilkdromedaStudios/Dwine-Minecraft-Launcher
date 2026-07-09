@@ -22,7 +22,10 @@ ELEMENT_TYPES = (
     "fps", "ping", "cps", "memory", "coordinates", "direction",
     "keystrokes", "armor_status", "potion_effects", "clock",
     "day_counter", "server_ip", "music_player", "sprint_indicator",
-    "combo_counter", "saturation", "biome",
+    "sneak_indicator", "combo_counter", "saturation", "biome",
+    "compass", "speed", "stopwatch", "match_timer", "hit_distance",
+    "hit_delay", "block_hit_delay", "server_info", "fps_graph",
+    "chunk_graph", "party_list", "cooldown",
 )
 
 

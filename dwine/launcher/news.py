@@ -36,8 +36,9 @@ _FALLBACK: list[dict[str, Any]] = [
     },
     {
         "title": "One-click performance",
-        "body": "The FPS Mode preset installs Sodium, Lithium, FerriteCore, "
-        "Entity Culling and more — matched to your exact Minecraft version.",
+        "body": "Enable FPS Boost on the Features tab to get Sodium, Lithium, "
+        "FerriteCore, Entity Culling and more — matched to your exact "
+        "Minecraft version.",
         "date": "2026-01-01",
         "tag": "tips",
     },
