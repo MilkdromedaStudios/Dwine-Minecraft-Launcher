@@ -153,8 +153,10 @@ def cmd_mods(args) -> int:
     manager = ModManager(profile)
 
     if args.action == "search":
-        for hit in modrinth.search(args.query or "", game_version=profile.version,
-                                   loader=profile.loader):
+        loader = profile.loader if profile.loader != "vanilla" else None
+        for hit in modrinth.search(args.query or "",
+                                   game_version=profile.effective_version(),
+                                   loader=loader):
             print(f"{hit.slug:<28} {hit.downloads:>12,}  {hit.title}")
     elif args.action == "install":
         installed = manager.install(args.query)
@@ -189,14 +191,6 @@ def cmd_theme(args) -> int:
     elif args.action == "set":
         cfg.set("theme.name", args.name)
         print(f"Theme set to {args.name}")
-    elif args.action == "build":
-        from pathlib import Path
-
-        from .theme.mcpack import build_pack
-
-        theme = load_theme(args.name or cfg.get("theme.name"))
-        dest = build_pack(theme, args.mc or "1.21", Path(args.out or "."))
-        print(f"Resource pack written → {dest}")
     return 0
 
 
@@ -242,40 +236,6 @@ def cmd_crash(args) -> int:
         print(f"\n  [{finding.title}]")
         print(f"  → {finding.advice}")
     return 0
-
-
-def cmd_news(_args) -> int:
-    from .launcher.news import fetch_news
-
-    for item in fetch_news():
-        print(f"— {item.title} ({item.date})\n  {item.body}\n")
-    return 0
-
-
-def cmd_sync(args) -> int:
-    from .integrations import cloudsync
-
-    if args.action == "push":
-        print(f"Snapshot → {cloudsync.push()}")
-    else:
-        ok = cloudsync.pull()
-        print("Restored latest snapshot." if ok else "No snapshot found.")
-    return 0
-
-
-def cmd_safety(_args) -> int:
-    from .features.safety import COMPETITIVE_NETWORKS, audit_catalog
-
-    problems = audit_catalog()
-    print("Feature catalog audit:", "PASS ✓" if not problems else "FAIL ✗")
-    for problem in problems:
-        print(f"  - {problem}")
-    print(f"\nCompetitive networks with enforced fair-play policy "
-          f"({len(COMPETITIVE_NETWORKS)}):")
-    for network in COMPETITIVE_NETWORKS:
-        print(f"  - {network}")
-    return 1 if problems else 0
-
 
 
 def cmd_update(args) -> int:
@@ -348,7 +308,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     p = sub.add_parser("login", help="add a Microsoft or offline account")
     p.add_argument("--client-id", default="",
-                   help="save your Azure application (client) ID first")
+                   help="optional: use your own Azure app instead of the "
+                        "built-in link-code login")
     p.add_argument("--offline", default="", metavar="NAME",
                    help="add a local-only account for singleplayer testing")
 
@@ -376,11 +337,9 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("query", nargs="?", default="")
     p.add_argument("--profile", required=True)
 
-    p = sub.add_parser("theme", help="themes and the in-game pack")
-    p.add_argument("action", choices=["list", "set", "build"])
+    p = sub.add_parser("theme", help="launcher color themes")
+    p.add_argument("action", choices=["list", "set"])
     p.add_argument("name", nargs="?", default="")
-    p.add_argument("--mc", default="1.21")
-    p.add_argument("--out", default="")
 
     p = sub.add_parser("ping", help="ping a Minecraft server")
     p.add_argument("host")
@@ -392,12 +351,6 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("crash", help="analyze the latest crash report")
     p.add_argument("profile")
 
-    sub.add_parser("news", help="show the news feed")
-
-    p = sub.add_parser("sync", help="settings sync snapshots")
-    p.add_argument("action", choices=["push", "pull"])
-
-    sub.add_parser("safety", help="audit the feature catalog + policy")
     sub.add_parser("plugins", help="list installed plugins")
 
     p = sub.add_parser("update", help="check for and install Dwine updates")
@@ -419,9 +372,6 @@ HANDLERS = {
     "ping": cmd_ping,
     "clean": cmd_clean,
     "crash": cmd_crash,
-    "news": cmd_news,
-    "sync": cmd_sync,
-    "safety": cmd_safety,
     "plugins": cmd_plugins,
     "update": cmd_update,
     "setup-path": cmd_setup_path,

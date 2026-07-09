@@ -249,29 +249,3 @@ class ColorButton(QFrame):
         painter.setBrush(self._color)
         painter.setPen(QPen(QColor("#5A6472"), 1))
         painter.drawRoundedRect(1, 1, 52, 24, 6, 6)
-
-
-class ColorSwatch(QFrame):
-    """Clickable color square used by the crosshair/theme editors."""
-
-    clicked = Signal(str)
-
-    def __init__(self, color: str, selected: bool = False, parent=None):
-        super().__init__(parent)
-        self.color = color
-        self.selected = selected
-        self.setFixedSize(26, 26)
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-
-    def mouseReleaseEvent(self, event) -> None:  # noqa: N802
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.clicked.emit(self.color)
-        super().mouseReleaseEvent(event)
-
-    def paintEvent(self, _event) -> None:  # noqa: N802
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setBrush(QColor(self.color))
-        pen = QPen(QColor("#FFFFFF" if self.selected else "#00000000"), 2)
-        painter.setPen(pen)
-        painter.drawRoundedRect(2, 2, 22, 22, 6, 6)

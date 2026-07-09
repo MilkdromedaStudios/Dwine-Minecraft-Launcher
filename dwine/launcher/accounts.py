@@ -67,7 +67,9 @@ class AccountStore:
             and account.get("refresh_token")
             and time.time() >= float(account.get("expires_at", 0))
         ):
-            refreshed = auth.refresh(account["refresh_token"]).as_account()
+            # Accounts saved before the link-code flow existed are Azure ones.
+            flow = account.get("auth_flow", auth.FLOW_AZURE)
+            refreshed = auth.refresh(account["refresh_token"], flow=flow).as_account()
             account.update(refreshed)
             self._save()
         return account

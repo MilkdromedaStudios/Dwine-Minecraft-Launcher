@@ -110,6 +110,25 @@ def test_crash_analyzer_patterns():
     assert analyze_text("everything is fine, no crash here") == []
 
 
+def test_default_flow_is_link_code_without_client_id(monkeypatch):
+    from dwine.launcher import auth
+
+    monkeypatch.delenv("DWINE_MSA_CLIENT_ID", raising=False)
+    assert auth.default_flow() == auth.FLOW_LINK
+    monkeypatch.setenv("DWINE_MSA_CLIENT_ID", "my-azure-app")
+    assert auth.default_flow() == auth.FLOW_AZURE
+
+
+def test_session_records_auth_flow():
+    from dwine.launcher.auth import FLOW_LINK, Session
+
+    session = Session(name="Steve", uuid="u", access_token="a",
+                      refresh_token="r", xuid="x", expires_at=0)
+    account = session.as_account()
+    assert account["auth_flow"] == FLOW_LINK
+    assert account["user_type"] == "msa"
+
+
 def test_offline_session_is_deterministic():
     from dwine.launcher.auth import offline_session
 

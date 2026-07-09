@@ -23,7 +23,6 @@ from ..core import paths
 from ..core.config import get_config
 from ..core.events import bus
 from ..core.log import setup as setup_logging
-from ..integrations.discord_rpc import RichPresence
 from ..plugins.loader import load_all as load_plugins
 from ..theme.engine import background_css, build_qss
 from ..theme.themes import load_theme
@@ -32,10 +31,6 @@ from .widgets import NotificationCenter
 PAGES = [
     ("home", "⌂  Home"),
     ("mods", "▤  Mods && Packs"),
-    ("features", "✦  Features"),
-    ("hud", "▦  HUD Editor"),
-    ("screenshots", "◨  Screenshots"),
-    ("news", "☰  News"),
     ("logs", "≣  Logs"),
     ("accounts", "◉  Accounts"),
     ("settings", "⚙  Settings"),
@@ -119,7 +114,6 @@ class DwineWindow(QMainWindow):
         # thread through a queued signal before touching widgets.
         self.event_received.connect(self._on_event)
         bus.on("notify", lambda e, p: self.event_received.emit(e, p))
-        bus.on("safety.enforced", lambda e, p: self.event_received.emit(e, p))
         bus.on("game.exited", lambda e, p: self.event_received.emit(e, p))
 
         self._plugins = load_plugins()
@@ -130,8 +124,6 @@ class DwineWindow(QMainWindow):
                 except Exception:
                     pass
 
-        self.rpc = RichPresence()
-        self.rpc.connect()
         self.apply_theme()
         self._start_auto_update_check()
 
@@ -191,11 +183,6 @@ class DwineWindow(QMainWindow):
     def _on_event(self, event: str, payload: dict) -> None:
         if event == "notify":
             self.notify(payload.get("text", ""), payload.get("level", "info"))
-        elif event == "safety.enforced":
-            self.notify(
-                f"Safety policy: {payload.get('feature')} — {payload.get('reason')}",
-                "warning",
-            )
         elif event == "game.exited":
             code = payload.get("code", 0)
             level = "success" if code == 0 else "warning"
@@ -206,7 +193,6 @@ class DwineWindow(QMainWindow):
         self.notifications.reposition()
 
     def closeEvent(self, event) -> None:  # noqa: N802
-        self.rpc.close()
         for thread in list(self._threads):
             thread.quit()
             thread.wait(3000)

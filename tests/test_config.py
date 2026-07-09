@@ -4,14 +4,14 @@ from dwine.core.config import Config, DEFAULTS
 def test_defaults_present(config):
     assert config.get("theme.name") == "dwine-dark"
     assert config.get("game.memory_mb") == 4096
-    assert config.get("safety.respect_server_rules") is True
+    assert config.get("performance.auto_clean.enabled") is True
 
 
 def test_set_get_roundtrip(config):
     config.set("game.memory_mb", 8192)
     assert config.get("game.memory_mb") == 8192
-    config.set("features.zoom.enabled", True)
-    assert config.get("features.zoom.enabled") is True
+    config.set("auth.client_id", "abc-123")
+    assert config.get("auth.client_id") == "abc-123"
 
 
 def test_persistence(config):

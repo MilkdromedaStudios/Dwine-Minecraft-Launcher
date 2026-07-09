@@ -53,9 +53,10 @@ class ModManager:
         return loaders
 
     def resolve(self, slug: str) -> modrinth.ProjectVersion | None:
+        game_version = self.profile.effective_version()
         for loader in self._loaders_to_try():
             version = modrinth.best_version(
-                slug, game_version=self.profile.version, loader=loader
+                slug, game_version=game_version, loader=loader
             )
             if version:
                 return version
@@ -73,8 +74,8 @@ class ModManager:
         version = self.resolve(slug)
         if version is None:
             raise LookupError(
-                f"{slug!r} has no build for Minecraft {self.profile.version} "
-                f"({self.profile.loader})"
+                f"{slug!r} has no build for Minecraft "
+                f"{self.profile.effective_version()} ({self.profile.loader})"
             )
         file = version.primary_file
         dest = self.profile.mods_dir / file.filename

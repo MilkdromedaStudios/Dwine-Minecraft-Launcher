@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
 
 from ...core.config import get_config
 from ...launcher.accounts import AccountStore
-from ...launcher.news import fetch_news
 from ...launcher.profiles import Profile, ProfileStore
 from ..widgets import Card
 
@@ -171,17 +170,10 @@ class HomePage(QWidget):
         launch_card.add(self.status)
         layout.addWidget(launch_card)
 
-        # -- news --------------------------------------------------------
-        news_card = Card("News")
-        self.news_box = QVBoxLayout()
-        news_card.add_layout(self.news_box)
-        layout.addWidget(news_card)
         layout.addStretch(1)
 
         self.reload_profiles()
         self._refresh_versions()
-        self.window.run_async(fetch_news, on_done=self._show_news,
-                              on_error=lambda _m: None)
 
     # -- profiles ------------------------------------------------------
 
@@ -333,10 +325,3 @@ class HomePage(QWidget):
             self.window.notify(message, "error")
 
         self.window.run_async(do_launch, on_done=done, on_error=failed)
-
-    def _show_news(self, items) -> None:
-        for item in items[:4]:
-            label = QLabel(f"<b>{item.title}</b><br>{item.body}")
-            label.setWordWrap(True)
-            label.setTextFormat(Qt.TextFormat.RichText)
-            self.news_box.addWidget(label)

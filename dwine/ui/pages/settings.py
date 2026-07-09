@@ -1,15 +1,13 @@
-"""Settings: theme picker, crosshair editor, game/memory, integrations."""
+"""Settings: launcher theme, game memory, Java path, auto-clean."""
 
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QComboBox,
-    QDialog,
     QHBoxLayout,
     QLabel,
     QLineEdit,
-    QPushButton,
     QScrollArea,
     QSlider,
     QVBoxLayout,
@@ -17,7 +15,6 @@ from PySide6.QtWidgets import (
 )
 
 from ...core.config import get_config
-from ...features.crosshair import PRESETS as CROSSHAIR_PRESETS
 from ...theme.themes import list_themes, load_theme
 from ..widgets import Card, SettingRow, ToggleSwitch
 
@@ -55,46 +52,7 @@ class SettingsPage(QWidget):
             self.window.notify(f"Theme: {theme_box.currentText()}", "success")
 
         theme_box.currentIndexChanged.connect(change_theme)
-        appearance.add(SettingRow(
-            "Theme", "Skins the launcher and, via the generated resource "
-            "pack, Minecraft itself.", theme_box))
-
-        in_game = ToggleSwitch(cfg.get("theme.apply_in_game", True))
-        in_game.toggled.connect(lambda s: cfg.set("theme.apply_in_game", s))
-        appearance.add(SettingRow(
-            "Apply theme in-game",
-            "Regenerates the Dwine Theme resource pack on every launch.",
-            in_game))
-
-        crosshair_box = QComboBox()
-        active_preset = (cfg.get("crosshair", {}) or {}).get("preset", "default")
-        for name in (*CROSSHAIR_PRESETS, "custom"):
-            crosshair_box.addItem(
-                "custom (drawpad)" if name == "custom" else name, name)
-            if name == active_preset:
-                crosshair_box.setCurrentIndex(crosshair_box.count() - 1)
-        crosshair_box.currentIndexChanged.connect(
-            lambda _i: cfg.set("crosshair.preset", crosshair_box.currentData())
-        )
-        appearance.add(SettingRow(
-            "Crosshair", "Starting shapes, or your own drawpad drawing; "
-            "rendered into the theme pack.", crosshair_box))
-
-        drawpad_button = QPushButton("Open crosshair drawpad …")
-
-        def open_drawpad() -> None:
-            from ..crosshair_pad import CrosshairDrawpadDialog
-
-            if CrosshairDrawpadDialog(self).exec() == QDialog.DialogCode.Accepted:
-                index = crosshair_box.findData("custom")
-                if index >= 0:
-                    crosshair_box.setCurrentIndex(index)
-                self.window.notify("Custom crosshair saved.", "success")
-
-        drawpad_button.clicked.connect(open_drawpad)
-        appearance.add(SettingRow(
-            "Crosshair drawpad", "Paint a pixel-perfect crosshair of your own.",
-            drawpad_button))
+        appearance.add(SettingRow("Theme", "Launcher color scheme.", theme_box))
         layout.addWidget(appearance)
 
         # -- game -------------------------------------------------------------
@@ -121,50 +79,13 @@ class SettingsPage(QWidget):
             lambda: cfg.set("game.java_path", java_edit.text().strip()))
         game.add(SettingRow("Java path", "Leave empty for the managed runtime.",
                             java_edit))
-        layout.addWidget(game)
 
-        # -- performance --------------------------------------------------------
-        performance = Card("Performance")
         auto_clean = ToggleSwitch(cfg.get("performance.auto_clean.enabled", True))
         auto_clean.toggled.connect(
             lambda s: cfg.set("performance.auto_clean.enabled", s))
-        performance.add(SettingRow(
+        game.add(SettingRow(
             "Auto-clean", "Sweep old logs/crash reports and trim the download "
             "cache before each launch.", auto_clean))
-        opt_mods = ToggleSwitch(
-            cfg.get("performance.install_optimization_mods", True))
-        opt_mods.toggled.connect(
-            lambda s: cfg.set("performance.install_optimization_mods", s))
-        performance.add(SettingRow(
-            "Optimization mods", "Keep the FPS stack installed and updated in "
-            "modded profiles.", opt_mods))
-        layout.addWidget(performance)
-
-        # -- integrations ---------------------------------------------------------
-        integrations = Card("Integrations")
-        rpc = ToggleSwitch(cfg.get("integrations.discord_rpc", True))
-        rpc.toggled.connect(lambda s: cfg.set("integrations.discord_rpc", s))
-        integrations.add(SettingRow(
-            "Discord Rich Presence", "Show what you're playing on Discord.",
-            rpc))
-        spotify = ToggleSwitch(cfg.get("integrations.spotify.enabled", False))
-        spotify.toggled.connect(
-            lambda s: cfg.set("integrations.spotify.enabled", s))
-        integrations.add(SettingRow(
-            "Spotify miniplayer", "Requires your own free Spotify app client "
-            "ID (see docs).", spotify))
-        layout.addWidget(integrations)
-
-        # -- safety (read-only by design) ---------------------------------------
-        safety = Card("Safety")
-        note = QLabel(
-            "The safety policy is not configurable: no cheats, no packet "
-            "manipulation, automation locked to singleplayer, fair-play "
-            "variants on competitive networks. That's the whole point of Dwine."
-        )
-        note.setObjectName("Muted")
-        note.setWordWrap(True)
-        safety.add(note)
-        layout.addWidget(safety)
+        layout.addWidget(game)
 
         layout.addStretch(1)

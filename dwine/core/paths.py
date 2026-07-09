@@ -84,10 +84,6 @@ def logs_dir() -> Path:
     return data_dir() / "logs"
 
 
-def screenshots_dir() -> Path:
-    return data_dir() / "screenshots"
-
-
 def ensure_tree() -> None:
     """Create the full directory layout on first run."""
     for path in (
@@ -102,6 +98,5 @@ def ensure_tree() -> None:
         themes_dir(),
         plugins_dir(),
         logs_dir(),
-        screenshots_dir(),
     ):
         path.mkdir(parents=True, exist_ok=True)
