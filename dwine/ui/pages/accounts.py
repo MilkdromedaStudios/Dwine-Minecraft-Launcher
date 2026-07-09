@@ -33,16 +33,25 @@ from ...launcher.accounts import AccountStore
 from ..widgets import Card
 
 AZURE_HELP = (
-    "Microsoft requires each launcher to register a free Azure app "
-    "(≈5 minutes, once):<br>"
-    "1. Open <a href='https://portal.azure.com'>portal.azure.com</a> → "
-    "Microsoft Entra ID → App registrations → New registration.<br>"
-    "2. Any name · account type <i>Personal Microsoft accounts</i> · no "
-    "redirect URI needed.<br>"
+    "Microsoft requires each launcher to register its own app ID. "
+    "<b>This is free</b> — you need a Microsoft account, <i>not</i> a paid "
+    "Azure subscription, and no credit card (app registration is part of "
+    "Microsoft Entra ID's free tier):<br>"
+    "1. Open <a href='https://portal.azure.com'>portal.azure.com</a> and "
+    "sign in with any Microsoft account. If it offers a free trial or asks "
+    "for payment details to create a <i>subscription</i>, skip it — app "
+    "registration doesn't need one.<br>"
+    "2. Microsoft Entra ID → App registrations → New registration: any "
+    "name · account type <i>Personal Microsoft accounts</i> · no redirect "
+    "URI needed.<br>"
     "3. In the app: Authentication → enable <b>Allow public client "
     "flows</b> → Save.<br>"
     "4. Copy the <b>Application (client) ID</b> from Overview and paste "
-    "it above."
+    "it above.<br>"
+    "If login later fails with a 403, Mojang still needs to allow-list "
+    "your ID once — submit the free form at "
+    "<a href='https://aka.ms/mce-reviewappid'>aka.ms/mce-reviewappid</a> "
+    "and try again after the confirmation email."
 )
 
 

@@ -193,9 +193,12 @@ dwine --version
 
 ### First run
 
-1. **Accounts → Login setup** — paste your (free) Azure app client ID.
-   Microsoft requires every launcher to bring its own; the Accounts page
-   walks you through the ~5-minute registration, or see the docstring in
+1. **Accounts → Login setup** — paste your Azure app client ID.
+   Microsoft requires every launcher to bring its own, and **registering
+   one is free**: you need a Microsoft account, *not* a paid Azure
+   subscription, and no credit card — if the portal offers a free trial
+   or a subscription sign-up, skip it. The Accounts page walks you
+   through the ~5-minute registration, or see the docstring in
    [`dwine/launcher/auth.py`](dwine/launcher/auth.py). Then
    **Add Microsoft account** — your browser opens with a code, and the
    launcher finishes by itself. (CLI: `dwine login --client-id <ID>`.)
@@ -283,9 +286,27 @@ capes, party HUD…) are configured by the launcher and rendered by the Dwine
 companion Fabric mod, which lives in its own repo and is being upstreamed.
 Everything else in this README works today from this repo alone.
 
-**Why do I need my own Azure client ID?**
-Microsoft requires each launcher deployment to register (free) for the login
-API. It takes ~5 minutes, once, and means your auth traffic is yours alone.
+**Why do I need my own Azure client ID? Doesn't Azure cost money?**
+Microsoft requires each launcher deployment to register for the login API,
+and registration is genuinely **free**: app registrations live in Microsoft
+Entra ID's free tier. You sign in to portal.azure.com with a normal
+Microsoft account — no Azure subscription, no credit card. (Azure's paid
+side is cloud services like VMs and storage; you're not touching any of
+that. If the portal pushes a "free trial" or subscription sign-up, skip
+it.) It takes ~5 minutes, once, and means your auth traffic is yours
+alone. One extra step: Mojang allow-lists client IDs, so if the final
+login step returns a 403, submit their free form at
+[aka.ms/mce-reviewappid](https://aka.ms/mce-reviewappid) and retry after
+the confirmation email.
+
+**Can Dwine get me Minecraft for free / log in without owning the game?**
+No — and it never will. The signed-in Microsoft account must own
+Minecraft: Java Edition; anything that pretends otherwise is piracy and
+the opposite of what Dwine stands for. What you *can* do for free:
+`dwine launch <profile> --offline <Name>` runs singleplayer-only offline
+sessions for local testing (it deliberately cannot join servers), and
+Mojang offers an official Java Edition demo through the vanilla launcher
+if you want to try the game before buying it.
 
 ---
 
