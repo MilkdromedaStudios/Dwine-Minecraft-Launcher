@@ -193,7 +193,10 @@ dwine --version
 
 ### First run
 
-1. **Accounts → Login setup** — paste your Azure app client ID.
+1. **Accounts** — if you only need local singleplayer testing, use
+   **Add offline account** and skip Microsoft/Azure entirely. Offline
+   accounts cannot join online servers and do not prove game ownership.
+   For online play, use **Login setup** and paste your Azure app client ID.
    Microsoft requires every launcher to bring its own, and **registering
    one is free**: you need a Microsoft account, *not* a paid Azure
    subscription, and no credit card — if the portal offers a free trial
@@ -216,6 +219,7 @@ dwine versions                          # list Minecraft versions
 dwine versions --snapshots --old        # …including snapshots + beta/alpha
 dwine install 1.21.1 --loader fabric    # install any version + loader
 dwine login --client-id <AZURE_ID>      # save your client ID + device login
+dwine login --offline Steve             # local-only singleplayer account
 dwine launch my-profile --server play.example.com
 dwine mods search sodium --profile my-profile
 dwine theme set neon                    # six built-in themes
@@ -298,6 +302,11 @@ alone. One extra step: Mojang allow-lists client IDs, so if the final
 login step returns a 403, submit their free form at
 [aka.ms/mce-reviewappid](https://aka.ms/mce-reviewappid) and retry after
 the confirmation email.
+
+If you only want to test local worlds, you can skip Azure by adding an
+offline account in **Accounts** or with `dwine login --offline NAME`.
+That account is deliberately local-only: it cannot join authenticated
+servers and it is not a replacement for owning Minecraft.
 
 **Can Dwine get me Minecraft for free / log in without owning the game?**
 No — and it never will. The signed-in Microsoft account must own

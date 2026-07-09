@@ -59,6 +59,12 @@ def cmd_login(args) -> int:
     from .launcher import auth
     from .launcher.accounts import AccountStore
 
+    if getattr(args, "offline", ""):
+        name = args.offline.strip() or "Player"
+        AccountStore().add(auth.offline_session(name))
+        print(f"Added offline account {name} (singleplayer testing only).")
+        return 0
+
     if getattr(args, "client_id", ""):
         get_config().set("auth.client_id", args.client_id.strip())
         print("Saved auth.client_id to settings.json.")
@@ -340,9 +346,11 @@ def build_parser() -> argparse.ArgumentParser:
                    choices=["vanilla", "fabric", "quilt", "forge"])
     p.add_argument("--loader-version", default="")
 
-    p = sub.add_parser("login", help="add a Microsoft account (device code)")
+    p = sub.add_parser("login", help="add a Microsoft or offline account")
     p.add_argument("--client-id", default="",
                    help="save your Azure application (client) ID first")
+    p.add_argument("--offline", default="", metavar="NAME",
+                   help="add a local-only account for singleplayer testing")
 
     p = sub.add_parser("launch", help="launch a profile")
     p.add_argument("profile")

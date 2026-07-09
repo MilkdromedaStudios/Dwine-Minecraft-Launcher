@@ -1,4 +1,4 @@
-"""Accounts: Microsoft device-code login and account switching.
+"""Accounts: Microsoft device-code login, offline accounts and switching.
 
 Two fixes worth knowing about:
 
@@ -83,8 +83,29 @@ class AccountsPage(QWidget):
         setup.add(help_label)
         layout.addWidget(setup)
 
+        # -- free/local account -------------------------------------------
+        offline = Card("Offline account (no Microsoft/Azure)")
+        offline_note = QLabel(
+            "Add a local-only offline account for singleplayer testing when "
+            "you do not want to set up Microsoft Azure yet. Offline accounts "
+            "cannot join online servers and do not prove game ownership."
+        )
+        offline_note.setObjectName("Muted")
+        offline_note.setWordWrap(True)
+        offline.add(offline_note)
+
+        offline_row = QHBoxLayout()
+        self.offline_name_edit = QLineEdit("Player")
+        self.offline_name_edit.setPlaceholderText("Offline player name")
+        add_offline = QPushButton("Add offline account")
+        add_offline.clicked.connect(self._add_offline)
+        offline_row.addWidget(self.offline_name_edit, 1)
+        offline_row.addWidget(add_offline)
+        offline.add_layout(offline_row)
+        layout.addWidget(offline)
+
         # -- accounts ------------------------------------------------------
-        card = Card("Microsoft accounts")
+        card = Card("Saved accounts")
         self.code_label = QLabel("")
         self.code_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse)
@@ -151,6 +172,15 @@ class AccountsPage(QWidget):
         )
         self.code_label.setOpenExternalLinks(True)
         QDesktopServices.openUrl(QUrl(url))
+
+    def _add_offline(self) -> None:
+        name = self.offline_name_edit.text().strip() or "Player"
+        self.store.add(auth.offline_session(name))
+        self._reload()
+        self.window.notify(
+            f"Added offline account {name} for singleplayer testing.",
+            "success",
+        )
 
     def _login(self) -> None:
         if not (get_config().get("auth.client_id", "")
