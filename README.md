@@ -54,6 +54,51 @@ Modrinth, and you choose them.
   stack traces into plain-English fixes, live logs viewer, profile
   export/import, launcher themes, auto-cleaner, plugin API.
 
+## 🎮 The Dwine client mod
+
+The in-game features are a real **Fabric client mod** (in `mod/`, targeting
+Minecraft 1.21.x on Java 21) — not a launcher gimmick. The launcher stays in
+Python and *launches the game with the mod*:
+
+- **Sleek custom UI.** A flat, translucent, draggable **ClickGUI** (Right Shift)
+  with a panel per category, one-click module toggles, expandable settings
+  (sliders, toggles, modes) and rebindable keys — plus a drag-and-drop **HUD
+  editor** (Right Ctrl; scroll to scale).
+- **Many legit client modules,** all client-side and server-legal:
+  - *HUD* — FPS, CPS, coordinates, direction, ping, clock, keystrokes, armour,
+    potions, session timer, speed, biome, watermark, active-module list.
+  - *Render* — Fullbright, Zoom, No Bobbing, FOV changer.
+  - *Movement* — Toggle Sprint, Toggle Sneak, Auto Sprint.
+  - *Misc* — Frame Limit.
+- **Nothing the server can see.** No packet manipulation, no injection — every
+  module is cosmetic or quality-of-life, exactly as legit as the launcher.
+
+**How the launcher hands off to the mod:** on Play, a Fabric/Quilt profile on a
+supported version gets `dwine-client-<version>.jar` dropped into its `mods/`
+folder (Fabric API installed alongside), and the launcher writes the shared
+`config/dwine/features.json`. The mod reads that file, renders the enabled
+features in-game, and writes your in-game tweaks back to the same file — one
+source of truth for both sides.
+
+```bash
+dwine client status  --profile my-profile     # is the mod applied? where from?
+dwine client features --profile my-profile     # list features + on/off state
+dwine client enable  CPS --profile my-profile  # toggle a feature before launch
+dwine client install --profile my-profile      # drop the jar in now (no launch)
+```
+
+**Building the mod.** GitHub Actions builds it on every push
+(`.github/workflows/build-mod.yml`) and uploads `dwine-client-<version>.jar`;
+tagging `v*` attaches the jar to the release. To build locally:
+
+```bash
+cd mod && ./gradlew build      # → mod/build/libs/dwine-client-<version>.jar
+```
+
+The launcher auto-discovers a locally-built jar, a cached download, or the
+latest GitHub release — in that order — so `dwine client install` and Play just
+work once a jar exists.
+
 ## 📦 Installation
 
 **Requirements:** Python 3.10+ · that's it. (Dwine manages Java for you.)
@@ -161,6 +206,8 @@ dwine launch my-profile --server play.example.com
 dwine mods search sodium --profile my-profile
 dwine mods install sodium --profile my-profile
 dwine mods update --profile my-profile
+dwine client features --profile my-profile   # Dwine client mod features
+dwine client enable Keystrokes --profile my-profile
 dwine theme set neon                    # launcher color themes
 dwine ping mc.hypixel.net               # real SLP ping tester
 dwine clean --apply                     # sweep logs/caches
@@ -186,15 +233,23 @@ dwine setup-path                        # repair/install the dwine command shim
 ## 🏗 Architecture
 
 ```
-dwine/
+dwine/                 the launcher (Python)
 ├── core/          settings JSON system · event bus · HTTP w/ sha verification
 ├── launcher/      Mojang manifest · installer · Fabric/Quilt/Forge · MS auth
 │                  profiles · Java runtimes · crash analyzer · updates
+│                  companion.py — installs the client mod + writes features.json
 ├── content/       Modrinth client · mod/pack/shader managers
 ├── theme/         launcher themes · Qt stylesheet engine
 ├── ui/            PySide6 launcher (Home, Mods, Logs, Accounts, Settings)
 ├── tools/         auto-cleaner · SLP ping
 └── plugins/       plugin loader + stable API
+
+mod/                   the Dwine client mod (Java / Fabric, Minecraft 1.21.x)
+└── src/main/java/com/dwine/
+    ├── module/    module framework + impl/ (HUD · Render · Movement · Misc)
+    ├── setting/   Boolean / Number / Mode / Color settings
+    ├── gui/       sleek ClickGUI + HUD editor screens · theme
+    └── config/    reads & writes config/dwine/features.json (shared w/ launcher)
 ```
 
 Design rules that keep it honest:

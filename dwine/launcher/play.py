@@ -35,6 +35,19 @@ def launch_profile(
     version_data = prepare(profile)
 
     cfg = get_config()
+
+    if cfg.get("client.companion.enabled", True):
+        from . import companion
+
+        try:
+            companion.ensure_mod(
+                profile, download_ok=cfg.get("client.companion.download", True)
+            )
+        except Exception as exc:  # noqa: BLE001 - the mod is optional; never block Play
+            from ..core.events import bus
+
+            bus.emit("companion.error", {"stage": "launch", "error": str(exc)})
+
     extra_jvm: list[str] = list(profile.jvm_args)
     if profile.memory_mb:
         extra_jvm.append(f"-Xmx{profile.memory_mb}M")

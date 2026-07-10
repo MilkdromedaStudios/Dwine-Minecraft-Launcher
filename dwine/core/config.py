@@ -48,6 +48,15 @@ DEFAULTS: dict[str, Any] = {
     "auth": {
         "client_id": "",  # optional custom Azure app for Microsoft login
     },
+    "client": {
+        # The Dwine client mod (built from mod/, shipped by GitHub Actions).
+        "companion": {
+            "enabled": True,        # drop the mod into Fabric/Quilt profiles on Play
+            "auto_dependencies": True,  # also install Fabric API from Modrinth
+            "download": True,       # fetch the jar from GitHub releases if needed
+            "jar": "",              # explicit local jar path (overrides discovery)
+        },
+    },
 }
 
 

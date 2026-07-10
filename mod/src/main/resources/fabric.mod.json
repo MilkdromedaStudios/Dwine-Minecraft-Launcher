@@ -1,0 +1,31 @@
+{
+  "schemaVersion": 1,
+  "id": "dwine",
+  "version": "${version}",
+  "name": "Dwine Client",
+  "description": "The Dwine client — a sleek, fully legitimate client mod. Custom in-game UI (ClickGUI + HUD editor) and many server-legal client modules, driven by the Dwine launcher via config/dwine/features.json.",
+  "authors": [
+    "Milkdromeda Studios"
+  ],
+  "contact": {
+    "homepage": "https://github.com/MilkdromedaStudios/Dwine",
+    "sources": "https://github.com/MilkdromedaStudios/Dwine"
+  },
+  "license": "MIT",
+  "icon": "assets/dwine/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.dwine.DwineClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "~1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  }
+}
