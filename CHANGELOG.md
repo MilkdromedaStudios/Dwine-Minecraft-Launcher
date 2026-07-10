@@ -2,6 +2,28 @@
 
 ## Unreleased
 
+**The features are a real mod now**
+- Dwine's in-game features ship as an actual Fabric client mod
+  (`mod/`, Minecraft 1.21.x, Java 21) instead of a config file waiting for a
+  companion that never existed. It has a sleek custom UI — a flat, translucent,
+  draggable **ClickGUI** (Right Shift) with per-category panels, module toggles,
+  expandable settings and rebindable keys, plus a drag-and-drop **HUD editor**
+  (Right Ctrl, scroll to scale).
+- Many legit, server-legal client modules: HUD (FPS, CPS, coordinates,
+  direction, ping, clock, keystrokes, armour, potions, session timer, speed,
+  biome, watermark, active-module list), Render (Fullbright, Zoom, No Bobbing,
+  FOV changer), Movement (Toggle Sprint, Toggle Sneak, Auto Sprint) and Misc
+  (Frame Limit). Everything is client-side and cosmetic/QoL — no packets, no
+  injection, nothing the server can see.
+- **GitHub Actions builds the mod** (`.github/workflows/build-mod.yml`): every
+  push builds `dwine-client-<version>.jar` as an artifact, and tagging `v*`
+  attaches it to the release.
+- **The launcher stays in Python and launches the game with the mod.** On Play,
+  Fabric/Quilt profiles on a supported version get the Dwine jar dropped into
+  `mods/` (Fabric API installed alongside), and the launcher writes the shared
+  `config/dwine/features.json` the mod reads. New CLI: `dwine client status |
+  install | features | enable <name> | disable <name> --profile <p>`.
+
 **Login without Azure — link code**
 - New default sign-in: click **Sign in with Microsoft**, enter a short code
   at microsoft.com/link, done. Uses the official Minecraft launcher's public

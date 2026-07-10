@@ -177,6 +177,53 @@ def cmd_mods(args) -> int:
     return 0
 
 
+def cmd_client(args) -> int:
+    from .launcher import companion
+    from .launcher.profiles import ProfileStore
+
+    store = ProfileStore()
+    if not store.exists(args.profile):
+        print(f"error: no such profile: {args.profile}", file=sys.stderr)
+        return 2
+    profile = store.load(args.profile)
+
+    if args.action == "status":
+        info = companion.status(profile)
+        supported = "yes" if info["version_supported"] else \
+            f"no (mod targets {companion.MOD_MC_TARGET})"
+        print(f"profile    : {profile.name} ({info['loader']}, MC {info['version']})")
+        print(f"applies    : {'yes' if info['applies'] else 'no (needs fabric/quilt)'}")
+        print(f"supported  : {supported}")
+        print(f"jar source : {info['jar_source'] or '(none — build mod/ or publish a release)'}")
+        print(f"installed  : {', '.join(info['installed']) or '(none)'}")
+        print(f"features   : {info['features_file']}")
+    elif args.action == "install":
+        dest = companion.ensure_mod(profile, download_ok=not args.no_download)
+        if dest is None:
+            print("Could not install the Dwine client — build mod/ or publish a "
+                  "release, and use a Fabric/Quilt profile on Minecraft "
+                  f"{companion.MOD_MC_TARGET}.", file=sys.stderr)
+            return 1
+        print(f"Installed Dwine client → {dest}")
+    elif args.action == "features":
+        companion.ensure_features(profile)
+        category = None
+        for feat in companion.feature_states(profile):
+            if feat["category"] != category:
+                category = feat["category"]
+                print(f"\n{category}")
+            mark = "●" if feat["enabled"] else "○"
+            print(f"  {mark} {feat['name']:<16} {feat['description']}")
+    elif args.action in ("enable", "disable"):
+        if not args.name:
+            print("error: name is required (e.g. `dwine client enable CPS`)",
+                  file=sys.stderr)
+            return 2
+        name = companion.set_feature(profile, args.name, args.action == "enable")
+        print(f"{args.action.title()}d {name} for {profile.name}.")
+    return 0
+
+
 def cmd_theme(args) -> int:
     from .theme.themes import list_themes, load_theme
 
@@ -337,6 +384,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("query", nargs="?", default="")
     p.add_argument("--profile", required=True)
 
+    p = sub.add_parser("client",
+                       help="the Dwine client mod: install and toggle in-game features")
+    p.add_argument("action",
+                   choices=["status", "install", "features", "enable", "disable"])
+    p.add_argument("name", nargs="?", default="", help="feature name for enable/disable")
+    p.add_argument("--profile", required=True)
+    p.add_argument("--no-download", action="store_true",
+                   help="do not fetch the mod jar from GitHub releases")
+
     p = sub.add_parser("theme", help="launcher color themes")
     p.add_argument("action", choices=["list", "set"])
     p.add_argument("name", nargs="?", default="")
@@ -368,6 +424,7 @@ HANDLERS = {
     "launch": cmd_launch,
     "profile": cmd_profile,
     "mods": cmd_mods,
+    "client": cmd_client,
     "theme": cmd_theme,
     "ping": cmd_ping,
     "clean": cmd_clean,
