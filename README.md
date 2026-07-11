@@ -17,6 +17,39 @@
 
 ---
 
+## 🎬 The Dwine client, in game
+
+The launcher's features are a real **Fabric client mod** (in [`mod/`](mod/)). Here it
+is running in the Fabric dev environment — a sleek custom UI and many legit,
+server-legal client modules, all rendering in-game:
+
+<p align="center">
+  <img src="assets/media/demo.gif" width="760" alt="Dwine client in game: HUD, ClickGUI and HUD editor"/>
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/media/ingame-hud.png" alt="In-game HUD"/></td>
+    <td width="50%"><img src="assets/media/clickgui.png" alt="Dwine ClickGUI"/></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Legit HUD — FPS · coords · direction · ping · clock · keystrokes · armour · potions · speed · biome · arraylist</sub></td>
+    <td align="center"><sub>Sleek ClickGUI — a panel per category, one-click toggles, expandable settings, rebindable keys</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/media/hud-editor.png" alt="Dwine HUD editor"/></td>
+    <td width="50%"><img src="assets/media/title-modded.png" alt="Fabric modded title screen"/></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Drag-and-drop HUD editor — move &amp; scale every element</sub></td>
+    <td align="center"><sub>Loaded as a Fabric mod, launched by Dwine</sub></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Captured live via <code>./gradlew runClient</code>. (<a href="assets/media/demo.mp4">MP4</a>)</sub></p>
+
+---
+
 Dwine does exactly four things, and does them well:
 
 1. **Signs you in with a link code.** Click *Sign in with Microsoft*, enter a
