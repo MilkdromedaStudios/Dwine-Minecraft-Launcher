@@ -2,7 +2,7 @@ package com.dwine.module.impl.hud;
 
 import com.dwine.module.HudModule;
 import com.dwine.setting.ModeSetting;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -16,10 +16,10 @@ public class ClockHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
+    protected void renderHud(GuiGraphics ctx) {
         String pattern = format.is("12 hour") ? "hh:mm:ss a" : "HH:mm:ss";
         String label = new SimpleDateFormat(pattern).format(new Date());
-        panel(ctx, mc.textRenderer.getWidth(label), fontHeight());
+        panel(ctx, mc.font.width(label), fontHeight());
         text(ctx, label, 0, 0);
     }
 }

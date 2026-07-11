@@ -1,7 +1,7 @@
 package com.dwine.module.impl.hud;
 
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 /** Current framerate. */
 public class FpsHud extends HudModule {
@@ -11,9 +11,9 @@ public class FpsHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
-        String label = mc.getCurrentFps() + " FPS";
-        panel(ctx, mc.textRenderer.getWidth(label), fontHeight());
+    protected void renderHud(GuiGraphics ctx) {
+        String label = mc.getFps() + " FPS";
+        panel(ctx, mc.font.width(label), fontHeight());
         text(ctx, label, 0, 0);
     }
 }

@@ -16,21 +16,21 @@ public class FovChanger extends Module {
     @Override
     protected void onEnable() {
         if (mc.options != null) {
-            previous = mc.options.getFov().getValue();
+            previous = mc.options.fov().get();
         }
     }
 
     @Override
     public void onTick() {
         if (mc.options != null) {
-            mc.options.getFov().setValue(fov.getInt());
+            mc.options.fov().set(fov.getInt());
         }
     }
 
     @Override
     protected void onDisable() {
         if (mc.options != null && previous != null) {
-            mc.options.getFov().setValue(previous);
+            mc.options.fov().set(previous);
         }
     }
 }

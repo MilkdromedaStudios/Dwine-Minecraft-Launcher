@@ -1,8 +1,8 @@
 package com.dwine.module.impl.hud;
 
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.BlockPos;
 
 /** Player block coordinates. */
 public class CoordinatesHud extends HudModule {
@@ -11,13 +11,13 @@ public class CoordinatesHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
+    protected void renderHud(GuiGraphics ctx) {
         if (mc.player == null) {
             return;
         }
-        BlockPos p = mc.player.getBlockPos();
+        BlockPos p = mc.player.blockPosition();
         String label = "XYZ " + p.getX() + " " + p.getY() + " " + p.getZ();
-        panel(ctx, mc.textRenderer.getWidth(label), fontHeight());
+        panel(ctx, mc.font.width(label), fontHeight());
         text(ctx, label, 0, 0);
     }
 }

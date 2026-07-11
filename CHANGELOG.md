@@ -15,7 +15,7 @@
 
 **The features are a real mod now**
 - Dwine's in-game features ship as an actual Fabric client mod
-  (`mod/`, Minecraft 1.21.x, Java 21) instead of a config file waiting for a
+  (`mod/`, Minecraft 26.x, Java 25) instead of a config file waiting for a
   companion that never existed. It has a sleek custom UI — a flat, translucent,
   draggable **ClickGUI** (Right Shift) with per-category panels, module toggles,
   expandable settings and rebindable keys, plus a drag-and-drop **HUD editor**

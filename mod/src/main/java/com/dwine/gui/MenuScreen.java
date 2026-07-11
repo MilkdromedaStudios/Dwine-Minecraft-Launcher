@@ -7,9 +7,9 @@ import com.dwine.setting.BooleanSetting;
 import com.dwine.setting.ModeSetting;
 import com.dwine.setting.NumberSetting;
 import com.dwine.setting.Setting;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class MenuScreen extends Screen {
     private int sliderW;
 
     public MenuScreen() {
-        super(Text.literal("Dwine"));
+        super(Component.literal("Dwine"));
     }
 
     // -- geometry ------------------------------------------------------
@@ -87,17 +87,17 @@ public class MenuScreen extends Screen {
     // -- rendering -----------------------------------------------------
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         ctx.fill(0, 0, width, height, Theme.SCRIM);
         int[] p = panel();
         Draw.roundedRect(ctx, p[0], p[1], p[2], p[3], 8, Theme.PANEL);
         Draw.roundedOutline(ctx, p[0], p[1], p[2], p[3], 8, Theme.CARD_LINE);
 
-        ctx.drawText(textRenderer, "Dwine", p[0] + PAD, p[1] + 13, Theme.accent, false);
-        int nameW = textRenderer.getWidth("Dwine");
-        ctx.drawText(textRenderer, "client " + Dwine.VERSION, p[0] + PAD + nameW + 6, p[1] + 13, Theme.TEXT_DIM, false);
+        ctx.drawString(font, "Dwine", p[0] + PAD, p[1] + 13, Theme.accent, false);
+        int nameW = font.width("Dwine");
+        ctx.drawString(font, "client " + Dwine.VERSION, p[0] + PAD + nameW + 6, p[1] + 13, Theme.TEXT_DIM, false);
         String hint = "Esc to close   ·   HUD editor: hold Right Ctrl";
-        ctx.drawText(textRenderer, hint, p[0] + p[2] - PAD - textRenderer.getWidth(hint), p[1] + 13, Theme.TEXT_OFF, false);
+        ctx.drawString(font, hint, p[0] + p[2] - PAD - font.width(hint), p[1] + 13, Theme.TEXT_OFF, false);
 
         // tabs
         Category[] cats = Category.values();
@@ -107,8 +107,8 @@ public class MenuScreen extends Screen {
             boolean hov = inside(mouseX, mouseY, t);
             Draw.roundedRect(ctx, t[0], t[1], t[2], t[3], 6, sel ? Theme.accent : (hov ? Theme.CARD_HOVER : Theme.CARD));
             String title = cats[i].getTitle();
-            int tw = textRenderer.getWidth(title);
-            ctx.drawText(textRenderer, title, t[0] + (t[2] - tw) / 2, t[1] + 5,
+            int tw = font.width(title);
+            ctx.drawString(font, title, t[0] + (t[2] - tw) / 2, t[1] + 5,
                     sel ? 0xFF0E1420 : Theme.TEXT, false);
         }
 
@@ -136,27 +136,27 @@ public class MenuScreen extends Screen {
         super.render(ctx, mouseX, mouseY, delta);
     }
 
-    private void renderCard(DrawContext ctx, Module m, int x, int y, int w, int h, int mouseX, int mouseY) {
+    private void renderCard(GuiGraphics ctx, Module m, int x, int y, int w, int h, int mouseX, int mouseY) {
         boolean hov = inside(mouseX, mouseY, new int[]{x, y, w, h}) && sheetModule == null;
         Draw.roundedRect(ctx, x, y, w, h, 6, hov ? Theme.CARD_HOVER : Theme.CARD);
         if (m.isEnabled()) {
             Draw.roundedRect(ctx, x, y + 8, 2, h - 16, 1, Theme.accent); // accent rail
         }
-        String name = textRenderer.trimToWidth(m.getName(), w - 16);
-        ctx.drawText(textRenderer, name, x + 8, y + 7, m.isEnabled() ? Theme.TEXT : Theme.TEXT_DIM, false);
-        String desc = textRenderer.trimToWidth(m.getDescription(), w - 40);
-        ctx.drawText(textRenderer, desc, x + 8, y + 19, Theme.TEXT_OFF, false);
+        String name = font.plainSubstrByWidth(m.getName(), w - 16);
+        ctx.drawString(font, name, x + 8, y + 7, m.isEnabled() ? Theme.TEXT : Theme.TEXT_DIM, false);
+        String desc = font.plainSubstrByWidth(m.getDescription(), w - 40);
+        ctx.drawString(font, desc, x + 8, y + 19, Theme.TEXT_OFF, false);
         // toggle pill
         Draw.toggle(ctx, x + 8, y + h - 15, 18, 10, m.isEnabled(), Theme.accent);
         // gear (settings) affordance if the module has settings
         if (!m.getSettings().isEmpty()) {
             int gx = x + w - 16, gy = y + h - 15;
             boolean gh = inside(mouseX, mouseY, new int[]{gx - 2, gy - 2, 14, 14});
-            ctx.drawText(textRenderer, "⚙", gx, gy, gh ? Theme.accent : Theme.TEXT_DIM, false);
+            ctx.drawString(font, "⚙", gx, gy, gh ? Theme.accent : Theme.TEXT_DIM, false);
         }
     }
 
-    private void renderSheet(DrawContext ctx, int[] p, int mouseX, int mouseY) {
+    private void renderSheet(GuiGraphics ctx, int[] p, int mouseX, int mouseY) {
         ctx.fill(p[0], p[1], p[0] + p[2], p[1] + p[3], 0xCC0B0E15);
         List<Setting> settings = sheetModule.getSettings();
         int rows = settings.size();
@@ -167,14 +167,14 @@ public class MenuScreen extends Screen {
         Draw.roundedRect(ctx, sx, sy, sw, sh, 8, Theme.PANEL_LIGHT);
         Draw.roundedOutline(ctx, sx, sy, sw, sh, 8, Theme.accentSoft);
 
-        ctx.drawText(textRenderer, sheetModule.getName(), sx + 14, sy + 12, Theme.TEXT, false);
+        ctx.drawString(font, sheetModule.getName(), sx + 14, sy + 12, Theme.TEXT, false);
         boolean closeHover = inside(mouseX, mouseY, new int[]{sx + sw - 20, sy + 10, 12, 12});
-        ctx.drawText(textRenderer, "✕", sx + sw - 18, sy + 11, closeHover ? Theme.accent : Theme.TEXT_DIM, false);
+        ctx.drawString(font, "✕", sx + sw - 18, sy + 11, closeHover ? Theme.accent : Theme.TEXT_DIM, false);
 
         int y = sy + 34;
         // bind row
         String keyLabel = bindingModule == sheetModule ? "press a key…" : "Key: " + keyName(sheetModule.getKeyCode());
-        ctx.drawText(textRenderer, keyLabel, sx + 14, y, bindingModule == sheetModule ? Theme.accent : Theme.TEXT_DIM, false);
+        ctx.drawString(font, keyLabel, sx + 14, y, bindingModule == sheetModule ? Theme.accent : Theme.TEXT_DIM, false);
         y += 18;
 
         for (Setting s : settings) {
@@ -183,21 +183,21 @@ public class MenuScreen extends Screen {
         }
     }
 
-    private void renderSetting(DrawContext ctx, Setting s, int x, int y, int w, int mouseX) {
+    private void renderSetting(GuiGraphics ctx, Setting s, int x, int y, int w, int mouseX) {
         if (s instanceof BooleanSetting b) {
-            ctx.drawText(textRenderer, s.getName(), x, y + 1, Theme.TEXT_DIM, false);
+            ctx.drawString(font, s.getName(), x, y + 1, Theme.TEXT_DIM, false);
             Draw.toggle(ctx, x + w - 20, y - 1, 18, 10, b.get(), Theme.accent);
         } else if (s instanceof NumberSetting n) {
-            ctx.drawText(textRenderer, s.getName() + ": " + fmt(n.get()), x, y - 3, Theme.TEXT_DIM, false);
+            ctx.drawString(font, s.getName() + ": " + fmt(n.get()), x, y - 3, Theme.TEXT_DIM, false);
             int tx = x, tw = w, ty = y + 9;
             Draw.roundedRect(ctx, tx, ty, tw, 3, 1, Theme.CARD);
             int fill = (int) Math.round(tw * n.getFraction());
             Draw.roundedRect(ctx, tx, ty, Math.max(2, fill), 3, 1, Theme.accent);
             Draw.roundedRect(ctx, tx + fill - 2, ty - 2, 4, 7, 2, Theme.TEXT);
         } else if (s instanceof ModeSetting m) {
-            ctx.drawText(textRenderer, s.getName(), x, y + 1, Theme.TEXT_DIM, false);
+            ctx.drawString(font, s.getName(), x, y + 1, Theme.TEXT_DIM, false);
             String v = m.get();
-            ctx.drawText(textRenderer, v, x + w - textRenderer.getWidth(v), y + 1, Theme.accent, false);
+            ctx.drawString(font, v, x + w - font.width(v), y + 1, Theme.accent, false);
         }
     }
 
@@ -324,22 +324,22 @@ public class MenuScreen extends Screen {
             return true;
         }
         if (keyCode == Dwine.config.clickGuiKey) {
-            close();
+            onClose();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         if (Dwine.config != null) {
             Dwine.config.save();
         }
-        super.close();
+        super.onClose();
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 

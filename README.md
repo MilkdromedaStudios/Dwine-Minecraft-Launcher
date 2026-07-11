@@ -91,7 +91,7 @@ Modrinth, and you choose them.
 ## 🎮 The Dwine client mod
 
 The in-game features are a real **Fabric client mod** (in `mod/`, targeting
-Minecraft 1.21.x on Java 21) — not a launcher gimmick. The launcher stays in
+Minecraft 26.x on Java 25) — not a launcher gimmick. The launcher stays in
 Python and *launches the game with the mod*:
 
 - **Sleek custom UI.** A modern **tile select menu** (Right Shift) — a card per
@@ -280,7 +280,7 @@ dwine/                 the launcher (Python)
 ├── tools/         auto-cleaner · SLP ping
 └── plugins/       plugin loader + stable API
 
-mod/                   the Dwine client mod (Java / Fabric, Minecraft 1.21.x)
+mod/                   the Dwine client mod (Java / Fabric, Minecraft 26.x)
 └── src/main/java/com/dwine/
     ├── module/    module framework + impl/ (HUD · Render · Movement · Misc)
     ├── setting/   Boolean / Number / Mode / Color settings

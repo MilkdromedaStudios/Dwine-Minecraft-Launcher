@@ -12,14 +12,14 @@ public class ToggleSneak extends Module {
     @Override
     public void onTick() {
         if (mc.options != null) {
-            mc.options.sneakKey.setPressed(true);
+            mc.options.keyShift.setDown(true);
         }
     }
 
     @Override
     protected void onDisable() {
         if (mc.options != null) {
-            mc.options.sneakKey.setPressed(false);
+            mc.options.keyShift.setDown(false);
         }
     }
 }

@@ -16,21 +16,21 @@ public class FrameLimit extends Module {
     @Override
     protected void onEnable() {
         if (mc.options != null) {
-            previous = mc.options.getMaxFps().getValue();
+            previous = mc.options.framerateLimit().get();
         }
     }
 
     @Override
     public void onTick() {
         if (mc.options != null) {
-            mc.options.getMaxFps().setValue(maxFps.getInt());
+            mc.options.framerateLimit().set(maxFps.getInt());
         }
     }
 
     @Override
     protected void onDisable() {
         if (mc.options != null && previous != null) {
-            mc.options.getMaxFps().setValue(previous);
+            mc.options.framerateLimit().set(previous);
         }
     }
 }

@@ -3,8 +3,8 @@ package com.dwine.module;
 import com.dwine.gui.Theme;
 import com.dwine.setting.BooleanSetting;
 import com.dwine.setting.NumberSetting;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.util.math.MatrixStack;
+import com.mojang.blaze3d.vertex.PoseStack;
+import net.minecraft.client.gui.GuiGraphics;
 
 /**
  * A module that draws something onto the in-game HUD. Position is stored in
@@ -32,23 +32,23 @@ public abstract class HudModule extends Module {
     }
 
     /** Draw the element. Called from the HUD render callback while enabled. */
-    public final void render(DrawContext ctx) {
+    public final void render(GuiGraphics ctx) {
         float s = scale.getFloat();
-        MatrixStack matrices = ctx.getMatrices();
-        matrices.push();
-        matrices.translate(x, y, 0);
-        matrices.scale(s, s, 1f);
+        PoseStack pose = ctx.pose();
+        pose.pushPose();
+        pose.translate(x, y, 0);
+        pose.scale(s, s, 1f);
         renderHud(ctx);
-        matrices.pop();
+        pose.popPose();
     }
 
     /** Subclasses draw here in local coordinates (origin at the element's top-left). */
-    protected abstract void renderHud(DrawContext ctx);
+    protected abstract void renderHud(GuiGraphics ctx);
 
     // -- drawing helpers ------------------------------------------------
 
     /** Draw a background panel behind the element (local coords). */
-    protected void panel(DrawContext ctx, int w, int h) {
+    protected void panel(GuiGraphics ctx, int w, int h) {
         setSize(w, h);
         if (background.get()) {
             ctx.fill(-2, -2, w + 2, h + 2, Theme.HUD_BG);
@@ -57,17 +57,17 @@ public abstract class HudModule extends Module {
     }
 
     /** Draw a line of text (local coords) using the theme colours. */
-    protected int text(DrawContext ctx, String value, int lx, int ly, int color) {
-        ctx.drawText(mc.textRenderer, value, lx, ly, color, shadow.get());
-        return mc.textRenderer.getWidth(value);
+    protected int text(GuiGraphics ctx, String value, int lx, int ly, int color) {
+        ctx.drawString(mc.font, value, lx, ly, color, shadow.get());
+        return mc.font.width(value);
     }
 
-    protected int text(DrawContext ctx, String value, int lx, int ly) {
+    protected int text(GuiGraphics ctx, String value, int lx, int ly) {
         return text(ctx, value, lx, ly, Theme.TEXT);
     }
 
     protected int fontHeight() {
-        return mc.textRenderer.fontHeight;
+        return mc.font.lineHeight;
     }
 
     protected void setSize(int w, int h) {

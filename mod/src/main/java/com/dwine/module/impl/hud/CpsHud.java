@@ -1,7 +1,7 @@
 package com.dwine.module.impl.hud;
 
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayDeque;
@@ -23,7 +23,7 @@ public class CpsHud extends HudModule {
         if (mc.getWindow() == null) {
             return;
         }
-        long handle = mc.getWindow().getHandle();
+        long handle = mc.getWindow().getWindow();
         boolean left = GLFW.glfwGetMouseButton(handle, GLFW.GLFW_MOUSE_BUTTON_LEFT) == GLFW.GLFW_PRESS;
         boolean right = GLFW.glfwGetMouseButton(handle, GLFW.GLFW_MOUSE_BUTTON_RIGHT) == GLFW.GLFW_PRESS;
         long now = System.currentTimeMillis();
@@ -46,9 +46,9 @@ public class CpsHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
+    protected void renderHud(GuiGraphics ctx) {
         String label = "CPS " + leftClicks.size() + " | " + rightClicks.size();
-        panel(ctx, mc.textRenderer.getWidth(label), fontHeight());
+        panel(ctx, mc.font.width(label), fontHeight());
         text(ctx, label, 0, 0);
     }
 }

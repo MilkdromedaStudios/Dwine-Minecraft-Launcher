@@ -29,7 +29,7 @@ MOD_LOADERS = {"fabric", "quilt"}
 
 # The Minecraft version the current mod build targets. Auto-install is limited
 # to matching profiles so the game never fails to boot on an unmet dependency.
-MOD_MC_TARGET = "1.21.1"
+MOD_MC_TARGET = "26.2"
 
 JAR_PREFIX = "dwine-client-"
 RELEASES_API = "https://api.github.com/repos/MilkdromedaStudios/Dwine/releases/latest"
@@ -67,7 +67,7 @@ FEATURES: list[dict[str, Any]] = [
 
 def mod_supports(version: str) -> bool:
     """True if the current mod build targets this Minecraft version."""
-    return version.startswith("1.21")
+    return version.startswith("26")
 
 
 # -- shared features.json ---------------------------------------------------

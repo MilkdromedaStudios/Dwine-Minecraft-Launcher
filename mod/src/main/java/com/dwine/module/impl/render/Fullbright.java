@@ -14,21 +14,21 @@ public class Fullbright extends Module {
     @Override
     protected void onEnable() {
         if (mc.options != null) {
-            previousGamma = mc.options.getGamma().getValue();
+            previousGamma = mc.options.gamma().get();
         }
     }
 
     @Override
     public void onTick() {
         if (mc.options != null) {
-            mc.options.getGamma().setValue(1.0);
+            mc.options.gamma().set(1.0);
         }
     }
 
     @Override
     protected void onDisable() {
         if (mc.options != null && previousGamma != null) {
-            mc.options.getGamma().setValue(previousGamma);
+            mc.options.gamma().set(previousGamma);
         }
     }
 }

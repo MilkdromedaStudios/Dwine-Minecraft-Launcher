@@ -1,7 +1,7 @@
 package com.dwine.module.impl.hud;
 
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 /** Name of the biome you are standing in. */
 public class BiomeHud extends HudModule {
@@ -10,16 +10,16 @@ public class BiomeHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
-        if (mc.player == null || mc.world == null) {
+    protected void renderHud(GuiGraphics ctx) {
+        if (mc.player == null || mc.level == null) {
             return;
         }
-        String path = mc.world.getBiome(mc.player.getBlockPos())
-                .getKey()
-                .map(key -> key.getValue().getPath())
+        String path = mc.level.getBiome(mc.player.blockPosition())
+                .unwrapKey()
+                .map(key -> key.location().getPath())
                 .orElse("unknown");
         String label = "Biome: " + prettify(path);
-        panel(ctx, mc.textRenderer.getWidth(label), fontHeight());
+        panel(ctx, mc.font.width(label), fontHeight());
         text(ctx, label, 0, 0);
     }
 

@@ -1,7 +1,8 @@
 package com.dwine.module;
 
 import com.dwine.setting.Setting;
-import net.minecraft.client.MinecraftClient;
+import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -13,7 +14,7 @@ import java.util.List;
  * changes what the server sees.
  */
 public abstract class Module {
-    protected static final MinecraftClient mc = MinecraftClient.getInstance();
+    protected static final Minecraft mc = Minecraft.getInstance();
 
     private final String name;
     private final String description;
@@ -49,7 +50,7 @@ public abstract class Module {
         if (keyCode == GLFW.GLFW_KEY_UNKNOWN || mc.getWindow() == null) {
             return false;
         }
-        return net.minecraft.client.util.InputUtil.isKeyPressed(mc.getWindow().getHandle(), keyCode);
+        return InputConstants.isKeyDown(mc.getWindow().getWindow(), keyCode);
     }
 
     // -- registration helpers ------------------------------------------

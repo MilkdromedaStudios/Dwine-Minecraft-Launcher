@@ -14,15 +14,15 @@ public class NoBobbing extends Module {
     @Override
     protected void onEnable() {
         if (mc.options != null) {
-            previous = mc.options.getBobView().getValue();
-            mc.options.getBobView().setValue(false);
+            previous = mc.options.bobView().get();
+            mc.options.bobView().set(false);
         }
     }
 
     @Override
     protected void onDisable() {
         if (mc.options != null && previous != null) {
-            mc.options.getBobView().setValue(previous);
+            mc.options.bobView().set(previous);
         }
     }
 }

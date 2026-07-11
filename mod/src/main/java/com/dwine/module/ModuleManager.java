@@ -21,7 +21,7 @@ import com.dwine.module.impl.render.FovChanger;
 import com.dwine.module.impl.render.Fullbright;
 import com.dwine.module.impl.render.NoBobbing;
 import com.dwine.module.impl.render.Zoom;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -114,7 +114,7 @@ public class ModuleManager {
         }
     }
 
-    public void renderHud(DrawContext ctx) {
+    public void renderHud(GuiGraphics ctx) {
         for (HudModule hud : getHudModules()) {
             if (hud.isEnabled()) {
                 hud.render(ctx);
