@@ -1,8 +1,8 @@
 package com.dwine;
 
 import com.dwine.config.ConfigManager;
-import com.dwine.gui.ClickGuiScreen;
 import com.dwine.gui.HudEditorScreen;
+import com.dwine.gui.MenuScreen;
 import com.dwine.module.Module;
 import com.dwine.module.ModuleManager;
 import net.fabricmc.api.ClientModInitializer;
@@ -75,7 +75,7 @@ public class DwineClient implements ClientModInitializer {
 
         if (canBind) {
             if (pressedThisTick(handle, config.clickGuiKey)) {
-                mc.setScreen(new ClickGuiScreen());
+                mc.setScreen(new MenuScreen());
             } else if (pressedThisTick(handle, config.hudEditorKey)) {
                 mc.setScreen(new HudEditorScreen());
             } else {

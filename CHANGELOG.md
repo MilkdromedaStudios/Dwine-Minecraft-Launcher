@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+**A polished client, not a hack client**
+- Replaced the ClickGUI with a modern **tile select menu** (Right Shift): a card
+  per module with iOS-style toggles, category tabs, a scrollable grid and a
+  per-module settings sheet (sliders, toggles, mode pickers, key binds).
+- Added **custom sleek buttons** — a mixin restyles every vanilla button
+  (title, pause, options…) into rounded, accented buttons, leaving icon buttons
+  untouched.
+- Dropped the "arraylist" HUD (the clearest hack-client tell). Real
+  in-game screenshots + a demo reel captured from `./gradlew runClient` were
+  added to the README.
+
 **The features are a real mod now**
 - Dwine's in-game features ship as an actual Fabric client mod
   (`mod/`, Minecraft 1.21.x, Java 21) instead of a config file waiting for a

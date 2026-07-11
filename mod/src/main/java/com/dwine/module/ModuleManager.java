@@ -1,7 +1,6 @@
 package com.dwine.module;
 
 import com.dwine.module.impl.hud.ArmorHud;
-import com.dwine.module.impl.hud.ArrayListHud;
 import com.dwine.module.impl.hud.BiomeHud;
 import com.dwine.module.impl.hud.ClockHud;
 import com.dwine.module.impl.hud.CoordinatesHud;
@@ -35,7 +34,6 @@ public class ModuleManager {
     public ModuleManager() {
         // HUD
         register(new WatermarkHud());
-        register(new ArrayListHud());
         register(new FpsHud());
         register(new CpsHud());
         register(new CoordinatesHud());

@@ -39,7 +39,6 @@ RELEASES_API = "https://api.github.com/repos/MilkdromedaStudios/Dwine/releases/l
 FEATURES: list[dict[str, Any]] = [
     # HUD
     {"name": "Watermark", "category": "HUD", "enabled": True, "description": "Show the Dwine wordmark."},
-    {"name": "Active List", "category": "HUD", "enabled": False, "description": "List active modules in the corner."},
     {"name": "FPS", "category": "HUD", "enabled": True, "description": "Show the current framerate."},
     {"name": "CPS", "category": "HUD", "enabled": False, "description": "Show clicks per second."},
     {"name": "Coordinates", "category": "HUD", "enabled": False, "description": "Show your XYZ position."},

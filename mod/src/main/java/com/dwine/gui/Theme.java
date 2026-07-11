@@ -22,6 +22,15 @@ public final class Theme {
     public static final int OUTLINE = 0x40FFFFFF;
     public static final int HUD_BG = 0x90121722;
 
+    // Sleek menu / button palette
+    public static final int SCRIM = 0xB4090C12;      // full-screen dim behind menus
+    public static final int CARD = 0xF21A2130;       // module tile
+    public static final int CARD_HOVER = 0xF2222C40;
+    public static final int CARD_LINE = 0x22FFFFFF;
+    public static final int BTN = 0xF01B2231;        // sleek vanilla-button replacement
+    public static final int BTN_HOVER = 0xF02A3855;
+    public static final int BTN_OFF = 0xC0161B26;
+
     /** Blend two ARGB colours; {@code t} = 0 returns a, 1 returns b. */
     public static int mix(int a, int b, float t) {
         t = Math.max(0f, Math.min(1f, t));
