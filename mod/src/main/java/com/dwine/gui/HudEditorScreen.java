@@ -2,9 +2,9 @@ package com.dwine.gui;
 
 import com.dwine.Dwine;
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.network.chat.Component;
 import org.lwjgl.glfw.GLFW;
 
 /**
@@ -18,14 +18,14 @@ public class HudEditorScreen extends Screen {
     private int dragOffY;
 
     public HudEditorScreen() {
-        super(Text.literal("Dwine HUD Editor"));
+        super(Component.literal("Dwine HUD Editor"));
     }
 
     @Override
-    public void render(DrawContext ctx, int mouseX, int mouseY, float delta) {
+    public void render(GuiGraphics ctx, int mouseX, int mouseY, float delta) {
         this.renderBackground(ctx, mouseX, mouseY, delta);
-        ctx.drawText(textRenderer, "HUD Editor", 16, 8, Theme.accent, false);
-        ctx.drawText(textRenderer, "drag to move  ·  scroll to resize  ·  esc to close", 78, 9, Theme.TEXT_DIM, false);
+        ctx.drawString(font, "HUD Editor", 16, 8, Theme.accent, false);
+        ctx.drawString(font, "drag to move  ·  scroll to resize  ·  esc to close", 78, 9, Theme.TEXT_DIM, false);
 
         for (HudModule hud : Dwine.modules.getHudModules()) {
             if (!hud.isEnabled()) {
@@ -38,7 +38,7 @@ public class HudEditorScreen extends Screen {
             int h = Math.max(8, hud.getScaledHeight());
             boolean hover = mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h;
             ctx.fill(x - 1, y - 1, x + w + 1, y + h + 1, hover ? Theme.HOVER : 0x20FFFFFF);
-            ctx.drawBorder(x - 1, y - 1, w + 2, h + 2, hover ? Theme.accent : Theme.OUTLINE);
+            ctx.renderOutline(x - 1, y - 1, w + 2, h + 2, hover ? Theme.accent : Theme.OUTLINE);
         }
         super.render(ctx, mouseX, mouseY, delta);
     }
@@ -86,22 +86,22 @@ public class HudEditorScreen extends Screen {
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
         if (keyCode == Dwine.config.hudEditorKey) {
-            close();
+            onClose();
             return true;
         }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public void close() {
+    public void onClose() {
         if (Dwine.config != null) {
             Dwine.config.save();
         }
-        super.close();
+        super.onClose();
     }
 
     @Override
-    public boolean shouldPause() {
+    public boolean isPauseScreen() {
         return false;
     }
 

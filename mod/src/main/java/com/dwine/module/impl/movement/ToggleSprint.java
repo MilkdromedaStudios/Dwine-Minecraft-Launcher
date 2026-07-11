@@ -12,14 +12,14 @@ public class ToggleSprint extends Module {
     @Override
     public void onTick() {
         if (mc.options != null && mc.player != null && !mc.player.isUsingItem()) {
-            mc.options.sprintKey.setPressed(true);
+            mc.options.keySprint.setDown(true);
         }
     }
 
     @Override
     protected void onDisable() {
         if (mc.options != null) {
-            mc.options.sprintKey.setPressed(false);
+            mc.options.keySprint.setDown(false);
         }
     }
 }

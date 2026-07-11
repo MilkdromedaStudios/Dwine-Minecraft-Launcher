@@ -3,7 +3,7 @@ package com.dwine.module.impl.hud;
 import com.dwine.Dwine;
 import com.dwine.gui.Theme;
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 
 /** The Dwine wordmark — a small signature in the corner. */
 public class WatermarkHud extends HudModule {
@@ -13,9 +13,9 @@ public class WatermarkHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
+    protected void renderHud(GuiGraphics ctx) {
         String label = Dwine.NAME;
-        int w = mc.textRenderer.getWidth(label);
+        int w = mc.font.width(label);
         panel(ctx, w, fontHeight());
         text(ctx, label, 0, 0, Theme.accent);
     }

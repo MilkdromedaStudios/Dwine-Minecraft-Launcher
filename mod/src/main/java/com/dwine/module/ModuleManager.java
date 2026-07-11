@@ -1,7 +1,6 @@
 package com.dwine.module;
 
 import com.dwine.module.impl.hud.ArmorHud;
-import com.dwine.module.impl.hud.ArrayListHud;
 import com.dwine.module.impl.hud.BiomeHud;
 import com.dwine.module.impl.hud.ClockHud;
 import com.dwine.module.impl.hud.CoordinatesHud;
@@ -22,7 +21,7 @@ import com.dwine.module.impl.render.FovChanger;
 import com.dwine.module.impl.render.Fullbright;
 import com.dwine.module.impl.render.NoBobbing;
 import com.dwine.module.impl.render.Zoom;
-import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.gui.GuiGraphics;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ public class ModuleManager {
     public ModuleManager() {
         // HUD
         register(new WatermarkHud());
-        register(new ArrayListHud());
         register(new FpsHud());
         register(new CpsHud());
         register(new CoordinatesHud());
@@ -116,7 +114,7 @@ public class ModuleManager {
         }
     }
 
-    public void renderHud(DrawContext ctx) {
+    public void renderHud(GuiGraphics ctx) {
         for (HudModule hud : getHudModules()) {
             if (hud.isEnabled()) {
                 hud.render(ctx);

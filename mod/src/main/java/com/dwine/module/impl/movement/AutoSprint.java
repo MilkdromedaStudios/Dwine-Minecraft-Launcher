@@ -14,15 +14,15 @@ public class AutoSprint extends Module {
         if (mc.options == null || mc.player == null) {
             return;
         }
-        if (mc.options.forwardKey.isPressed() && !mc.player.horizontalCollision) {
-            mc.options.sprintKey.setPressed(true);
+        if (mc.options.keyUp.isDown() && !mc.player.horizontalCollision) {
+            mc.options.keySprint.setDown(true);
         }
     }
 
     @Override
     protected void onDisable() {
         if (mc.options != null) {
-            mc.options.sprintKey.setPressed(false);
+            mc.options.keySprint.setDown(false);
         }
     }
 }

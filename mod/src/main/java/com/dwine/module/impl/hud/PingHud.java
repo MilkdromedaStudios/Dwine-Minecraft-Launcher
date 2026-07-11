@@ -1,8 +1,8 @@
 package com.dwine.module.impl.hud;
 
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.network.PlayerListEntry;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.multiplayer.PlayerInfo;
 
 /** Latency to the current server. */
 public class PingHud extends HudModule {
@@ -11,15 +11,15 @@ public class PingHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
+    protected void renderHud(GuiGraphics ctx) {
         String label = "-- ms";
-        if (mc.getNetworkHandler() != null && mc.player != null) {
-            PlayerListEntry entry = mc.getNetworkHandler().getPlayerListEntry(mc.player.getUuid());
+        if (mc.getConnection() != null && mc.player != null) {
+            PlayerInfo entry = mc.getConnection().getPlayerInfo(mc.player.getUUID());
             if (entry != null) {
                 label = entry.getLatency() + " ms";
             }
         }
-        panel(ctx, mc.textRenderer.getWidth(label), fontHeight());
+        panel(ctx, mc.font.width(label), fontHeight());
         text(ctx, label, 0, 0);
     }
 }

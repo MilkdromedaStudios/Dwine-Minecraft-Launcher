@@ -2,8 +2,8 @@ package com.dwine.module.impl.hud;
 
 import com.dwine.gui.Theme;
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.world.effect.MobEffectInstance;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,21 +15,21 @@ public class PotionHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
+    protected void renderHud(GuiGraphics ctx) {
         if (mc.player == null) {
             return;
         }
         List<String> lines = new ArrayList<>();
-        for (StatusEffectInstance effect : mc.player.getStatusEffects()) {
+        for (MobEffectInstance effect : mc.player.getActiveEffects()) {
             lines.add(describe(effect));
         }
         if (lines.isEmpty()) {
-            setSize(mc.textRenderer.getWidth("No effects"), fontHeight());
+            setSize(mc.font.width("No effects"), fontHeight());
             return;
         }
         int width = 0;
         for (String line : lines) {
-            width = Math.max(width, mc.textRenderer.getWidth(line));
+            width = Math.max(width, mc.font.width(line));
         }
         int lineHeight = fontHeight() + 1;
         panel(ctx, width, lines.size() * lineHeight - 1);
@@ -40,13 +40,13 @@ public class PotionHud extends HudModule {
         }
     }
 
-    private String describe(StatusEffectInstance effect) {
-        String name = effect.getEffectType().value().getName().getString();
+    private String describe(MobEffectInstance effect) {
+        String name = effect.getEffect().value().getDisplayName().getString();
         int amplifier = effect.getAmplifier();
         if (amplifier > 0) {
             name += " " + (amplifier + 1);
         }
-        String time = effect.isInfinite() ? "∞" : format(effect.getDuration());
+        String time = effect.isInfiniteDuration() ? "∞" : format(effect.getDuration());
         return name + " " + time;
     }
 

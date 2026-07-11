@@ -17,6 +17,40 @@
 
 ---
 
+## 🎬 The Dwine client, in game
+
+The launcher's features are a real **Fabric client mod** (in [`mod/`](mod/)),
+built to look like a polished client — a tile select menu and custom sleek
+buttons, not a hack-client ClickGUI. Captured live in the Fabric dev
+environment (`./gradlew runClient`):
+
+<p align="center">
+  <img src="assets/media/demo.gif" width="820" alt="Dwine client: tile menu, sleek buttons, HUD, HUD editor"/>
+</p>
+
+<table>
+  <tr>
+    <td width="50%"><img src="assets/media/menu.png" alt="Dwine tile select menu"/></td>
+    <td width="50%"><img src="assets/media/settings.png" alt="Module settings sheet"/></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Tile select menu (Right Shift) — categories, module cards, iOS-style toggles</sub></td>
+    <td align="center"><sub>Per-module settings sheet — sliders, toggles, mode pickers, key binds</sub></td>
+  </tr>
+  <tr>
+    <td width="50%"><img src="assets/media/title-buttons.png" alt="Sleek custom buttons"/></td>
+    <td width="50%"><img src="assets/media/hud.png" alt="In-game HUD"/></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Custom sleek buttons replace the flat vanilla ones, everywhere</sub></td>
+    <td align="center"><sub>Legit HUD — FPS · coords · direction · ping · clock · keystrokes · armour · potions · …</sub></td>
+  </tr>
+</table>
+
+<p align="center"><sub>Plus a drag-and-drop <a href="assets/media/hud-editor.png">HUD editor</a> (Right Ctrl). Captured via <code>./gradlew runClient</code> · (<a href="assets/media/demo.mp4">MP4</a>)</sub></p>
+
+---
+
 Dwine does exactly four things, and does them well:
 
 1. **Signs you in with a link code.** Click *Sign in with Microsoft*, enter a
@@ -57,16 +91,18 @@ Modrinth, and you choose them.
 ## 🎮 The Dwine client mod
 
 The in-game features are a real **Fabric client mod** (in `mod/`, targeting
-Minecraft 1.21.x on Java 21) — not a launcher gimmick. The launcher stays in
+Minecraft 26.x on Java 25) — not a launcher gimmick. The launcher stays in
 Python and *launches the game with the mod*:
 
-- **Sleek custom UI.** A flat, translucent, draggable **ClickGUI** (Right Shift)
-  with a panel per category, one-click module toggles, expandable settings
-  (sliders, toggles, modes) and rebindable keys — plus a drag-and-drop **HUD
-  editor** (Right Ctrl; scroll to scale).
+- **Sleek custom UI.** A modern **tile select menu** (Right Shift) — a card per
+  module with iOS-style toggles, category tabs and a per-module settings sheet
+  (sliders, toggles, mode pickers, rebindable keys) — plus **custom sleek
+  buttons** that replace the flat vanilla ones everywhere, and a drag-and-drop
+  **HUD editor** (Right Ctrl; scroll to scale). Built to read like a polished
+  client, not a hack-client ClickGUI.
 - **Many legit client modules,** all client-side and server-legal:
   - *HUD* — FPS, CPS, coordinates, direction, ping, clock, keystrokes, armour,
-    potions, session timer, speed, biome, watermark, active-module list.
+    potions, session timer, speed, biome, watermark.
   - *Render* — Fullbright, Zoom, No Bobbing, FOV changer.
   - *Movement* — Toggle Sprint, Toggle Sneak, Auto Sprint.
   - *Misc* — Frame Limit.
@@ -244,11 +280,11 @@ dwine/                 the launcher (Python)
 ├── tools/         auto-cleaner · SLP ping
 └── plugins/       plugin loader + stable API
 
-mod/                   the Dwine client mod (Java / Fabric, Minecraft 1.21.x)
+mod/                   the Dwine client mod (Java / Fabric, Minecraft 26.x)
 └── src/main/java/com/dwine/
     ├── module/    module framework + impl/ (HUD · Render · Movement · Misc)
     ├── setting/   Boolean / Number / Mode / Color settings
-    ├── gui/       sleek ClickGUI + HUD editor screens · theme
+    ├── gui/       tile select menu + HUD editor · sleek-button mixin · theme
     └── config/    reads & writes config/dwine/features.json (shared w/ launcher)
 ```
 

@@ -24,11 +24,11 @@ public class Zoom extends Module {
         }
         if (isKeyHeld()) {
             if (savedFov == null) {
-                savedFov = mc.options.getFov().getValue();
+                savedFov = mc.options.fov().get();
             }
-            mc.options.getFov().setValue(zoomFov.getInt());
+            mc.options.fov().set(zoomFov.getInt());
         } else if (savedFov != null) {
-            mc.options.getFov().setValue(savedFov);
+            mc.options.fov().set(savedFov);
             savedFov = null;
         }
     }
@@ -36,7 +36,7 @@ public class Zoom extends Module {
     @Override
     protected void onDisable() {
         if (mc.options != null && savedFov != null) {
-            mc.options.getFov().setValue(savedFov);
+            mc.options.fov().set(savedFov);
             savedFov = null;
         }
     }

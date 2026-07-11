@@ -1,8 +1,8 @@
 package com.dwine.module.impl.hud;
 
 import com.dwine.module.HudModule;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.util.math.Direction;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.Direction;
 
 /** Cardinal facing plus the axis you are looking along. */
 public class DirectionHud extends HudModule {
@@ -11,13 +11,13 @@ public class DirectionHud extends HudModule {
     }
 
     @Override
-    protected void renderHud(DrawContext ctx) {
+    protected void renderHud(GuiGraphics ctx) {
         if (mc.player == null) {
             return;
         }
-        Direction dir = mc.player.getHorizontalFacing();
+        Direction dir = mc.player.getDirection();
         String label = "Facing: " + cardinal(dir) + " (" + axis(dir) + ")";
-        panel(ctx, mc.textRenderer.getWidth(label), fontHeight());
+        panel(ctx, mc.font.width(label), fontHeight());
         text(ctx, label, 0, 0);
     }
 

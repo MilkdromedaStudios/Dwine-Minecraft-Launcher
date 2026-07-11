@@ -7,7 +7,7 @@ from dwine.launcher.profiles import Profile, ProfileStore
 
 
 def _fabric_profile() -> Profile:
-    profile = Profile(name="Client Test", version="1.21.1", loader="fabric")
+    profile = Profile(name="Client Test", version="26.2", loader="fabric")
     ProfileStore().save(profile)
     return profile
 
@@ -19,9 +19,9 @@ def test_catalog_names_are_unique():
 
 
 def test_mod_supports_version():
-    assert companion.mod_supports("1.21.1")
-    assert companion.mod_supports("1.21.4")
-    assert not companion.mod_supports("1.20.1")
+    assert companion.mod_supports("26.2")
+    assert companion.mod_supports("26.1.2")
+    assert not companion.mod_supports("1.21.1")
 
 
 def test_ensure_features_seeds_and_merges():
