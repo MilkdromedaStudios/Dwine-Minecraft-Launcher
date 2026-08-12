@@ -54,8 +54,23 @@ jobs:
           cache-dependency-path: launcher/package.json
 
       - name: Install launcher dependencies
+        shell: pwsh
         working-directory: launcher
-        run: npm install --no-audit --no-fund
+        run: |
+          $ErrorActionPreference = 'Continue'
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            Write-Host "npm install attempt $attempt of 3"
+            npm install --no-audit --no-fund
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -lt 3) {
+              Write-Host "Transient npm/Electron download failure; cleaning and retrying..."
+              Start-Sleep -Seconds (5 * $attempt)
+              if (Test-Path node_modules) {
+                Remove-Item node_modules -Recurse -Force -ErrorAction SilentlyContinue
+              }
+            }
+          }
+          throw 'npm install failed after 3 attempts.'
 
       - name: Build Windows executables
         working-directory: launcher
