@@ -1,22 +1,18 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
+# Gradle / Loom
+.gradle/
 build/
-dist/
-.venv/
-venv/
+run/
+remappedSrc/
+*.log
 
-# Tooling
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage
-
-# Dwine runtime data (never commit user data)
-settings.json
-accounts.json
-spotify_tokens.json
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+bin/
 
 # OS noise
 .DS_Store
