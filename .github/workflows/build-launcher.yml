@@ -30,11 +30,13 @@ jobs:
           distribution: temurin
           java-version: "25"
 
-      - name: Set up Gradle
+      - name: Set up Gradle 9.5.1
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.5.1"
 
       - name: Build bundled Dwine 26.2 mod
-        run: .\gradlew.bat build --stacktrace
+        run: gradle build --stacktrace
 
       - name: Stage bundled mod
         shell: pwsh
