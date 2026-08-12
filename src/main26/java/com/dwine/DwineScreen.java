@@ -1,6 +1,5 @@
 package com.dwine;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
@@ -25,7 +24,7 @@ public final class DwineScreen extends Screen {
 
         this.addRenderableWidget(Button.builder(
                 Component.literal("Close"),
-                button -> Minecraft.getInstance().setScreen(null))
+                button -> this.minecraft.gui.setScreen(null))
                 .bounds(x, y + 34, 220, 20)
                 .build());
     }
