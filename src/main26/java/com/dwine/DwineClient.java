@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 /** Minecraft 26.2 native Dwine client entrypoint. */
 public final class DwineClient implements ClientModInitializer {
     public static final String MOD_ID = "dwine";
-    public static final String VERSION = "0.4.0";
+    public static final String VERSION = "0.5.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
@@ -21,7 +21,8 @@ public final class DwineClient implements ClientModInitializer {
 
     private static final KeyMapping OPEN_DWINE = KeyMappingHelper.registerKeyMapping(
             new KeyMapping("key.dwine.open_menu", InputConstants.Type.KEYSYM, InputConstants.KEY_RSHIFT, CATEGORY));
-
+    private static final KeyMapping OPEN_DWINE_FALLBACK = KeyMappingHelper.registerKeyMapping(
+            new KeyMapping("key.dwine.open_menu_fallback", InputConstants.Type.KEYSYM, InputConstants.KEY_J, CATEGORY));
     private static final KeyMapping ZOOM = KeyMappingHelper.registerKeyMapping(
             new KeyMapping("key.dwine.zoom", InputConstants.Type.KEYSYM, InputConstants.KEY_C, CATEGORY));
 
@@ -29,16 +30,21 @@ public final class DwineClient implements ClientModInitializer {
     private boolean sneakLatched;
     private boolean sprintWasDown;
     private boolean sneakWasDown;
+    private boolean menuKeyWasDown;
 
     @Override
     public void onInitializeClient() {
         LOGGER.info("Starting Dwine {} for Minecraft 26.2", VERSION);
         DwineFeatures.INSTANCE.registerHud();
+        DwineUiHooks.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            while (OPEN_DWINE.consumeClick()) {
+            boolean requestedMenu = OPEN_DWINE.consumeClick() || OPEN_DWINE_FALLBACK.consumeClick();
+            boolean menuKeyDown = OPEN_DWINE.isDown() || OPEN_DWINE_FALLBACK.isDown();
+            if (requestedMenu || (menuKeyDown && !menuKeyWasDown)) {
                 client.gui.setScreen(new DwineScreen(Component.literal("Dwine")));
             }
+            menuKeyWasDown = menuKeyDown;
 
             DwineFeatures.INSTANCE.tick(client, ZOOM.isDown());
             if (client.player == null) return;
