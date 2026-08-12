@@ -4,9 +4,7 @@
   "version": "${version}",
   "name": "Dwine",
   "description": "A sleek standalone Fabric client mod with a modern module menu, HUD editor, custom UI styling, and server-legal quality-of-life features.",
-  "authors": [
-    "Milkdromeda Studios"
-  ],
+  "authors": ["Milkdromeda Studios"],
   "contact": {
     "homepage": "https://github.com/MilkdromedaStudios/Dwine-Minecraft-Launcher",
     "sources": "https://github.com/MilkdromedaStudios/Dwine-Minecraft-Launcher"
@@ -15,17 +13,13 @@
   "icon": "assets/dwine/icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": [
-      "com.dwine.DwineClient"
-    ]
+    "client": ["com.dwine.DwineClient"]
   },
-  "mixins": [
-    "dwine.mixins.json"
-  ],
+  "mixins": ["dwine.mixins.json"],
   "depends": {
-    "fabricloader": ">=0.16.5",
-    "minecraft": "~1.21.1",
-    "java": ">=21",
+    "fabricloader": ">=0.19.3",
+    "minecraft": "~26.2",
+    "java": ">=25",
     "fabric-api": "*"
   },
   "suggests": {
