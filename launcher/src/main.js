@@ -14,6 +14,11 @@ function mcDir() {
   return path.join(os.homedir(), '.minecraft');
 }
 
+function bundledModJar() {
+  if (app.isPackaged) return path.join(process.resourcesPath, 'dwine', 'dwine-26.2.jar');
+  return path.join(__dirname, '..', 'bundled', 'dwine-26.2.jar');
+}
+
 function dataFile() { return path.join(app.getPath('userData'), 'dwine-launcher.json'); }
 function readState() {
   try { return JSON.parse(fs.readFileSync(dataFile(), 'utf8')); }
@@ -106,17 +111,17 @@ async function installFabric() {
   return loaderVersion;
 }
 
-function installDwineJar(selectedModJar) {
-  if (!selectedModJar || !fs.existsSync(selectedModJar)) throw new Error('Choose a Dwine 26.2 client mod jar first.');
-  const lower = path.basename(selectedModJar).toLowerCase();
-  if (!lower.endsWith('.jar')) throw new Error('The selected Dwine mod must be a .jar file.');
+function installDwineJar(customJar) {
+  const source = customJar && fs.existsSync(customJar) ? customJar : bundledModJar();
+  if (!source || !fs.existsSync(source)) throw new Error('The bundled Dwine 26.2 client mod is missing. Reinstall Dwine or choose a custom jar.');
+  if (!path.basename(source).toLowerCase().endsWith('.jar')) throw new Error('The Dwine mod must be a .jar file.');
   const mods = path.join(mcDir(), 'mods');
   fs.mkdirSync(mods, { recursive: true });
   for (const file of fs.readdirSync(mods)) {
     if (/^dwine.*\.jar$/i.test(file)) fs.rmSync(path.join(mods, file), { force: true });
   }
   const target = path.join(mods, `dwine-${MC_VERSION}.jar`);
-  fs.copyFileSync(selectedModJar, target);
+  fs.copyFileSync(source, target);
   return target;
 }
 
@@ -146,7 +151,7 @@ async function prepare() {
   const modTarget = installDwineJar(state.selectedModJar);
   const versionId = registerProfile(loaderVersion);
   const next = writeState({ ...state, lastLoaderVersion: loaderVersion, lastPreparedAt: new Date().toISOString() });
-  return { ok: true, loaderVersion, versionId, modTarget, state: next };
+  return { ok: true, loaderVersion, versionId, modTarget, bundled: !state.selectedModJar, state: next };
 }
 
 async function launchOfficialLauncher() {
@@ -169,13 +174,20 @@ function createWindow() {
   ipcMain.on('dwine:window-close', () => win.close());
 }
 
-ipcMain.handle('dwine:get-state', async () => ({ ...readState(), minecraftDir: mcDir(), minecraftPresent: fs.existsSync(mcDir()), targetVersion: MC_VERSION }));
+ipcMain.handle('dwine:get-state', async () => ({
+  ...readState(),
+  minecraftDir: mcDir(),
+  minecraftPresent: fs.existsSync(mcDir()),
+  targetVersion: MC_VERSION,
+  bundledModPresent: fs.existsSync(bundledModJar())
+}));
 ipcMain.handle('dwine:save-settings', async (_e, patch) => writeState({ ...readState(), ...patch }));
 ipcMain.handle('dwine:choose-mod-jar', async () => {
-  const result = await dialog.showOpenDialog({ title: 'Choose Dwine 26.2 client mod', properties: ['openFile'], filters: [{ name: 'Java archive', extensions: ['jar'] }] });
+  const result = await dialog.showOpenDialog({ title: 'Choose custom Dwine 26.2 client mod', properties: ['openFile'], filters: [{ name: 'Java archive', extensions: ['jar'] }] });
   if (result.canceled || !result.filePaths[0]) return null;
   return writeState({ ...readState(), selectedModJar: result.filePaths[0] });
 });
+ipcMain.handle('dwine:use-bundled-mod', async () => writeState({ ...readState(), selectedModJar: '' }));
 ipcMain.handle('dwine:prepare', async () => prepare());
 ipcMain.handle('dwine:launch', async () => { await prepare(); await launchOfficialLauncher(); return { ok: true }; });
 ipcMain.handle('dwine:open-folder', async (_e, kind) => {
