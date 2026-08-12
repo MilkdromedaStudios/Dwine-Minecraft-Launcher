@@ -1,0 +1,11 @@
+{
+  "required": true,
+  "package": "com.dwine.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "PressableWidgetMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
