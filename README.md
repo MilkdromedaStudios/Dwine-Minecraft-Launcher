@@ -2,117 +2,94 @@
   <img src="assets/logo.svg" alt="Dwine" width="420"/>
 </p>
 
-<h3 align="center">A sleek standalone Fabric client mod for Minecraft.</h3>
+<h3 align="center">A Dwine desktop companion launcher plus native Fabric client mod for Minecraft 26.2.</h3>
 
 <p align="center">
-  Fabric · Minecraft 1.21.1 · Java 21 · Client-side quality-of-life features
-</p>
-
-<p align="center">
-  <img alt="fabric" src="https://img.shields.io/badge/loader-Fabric-DBD0B4">
-  <img alt="license" src="https://img.shields.io/badge/license-MIT-3DDC97">
-  <img alt="minecraft" src="https://img.shields.io/badge/Minecraft-1.21.1-62B47A">
+  Windows companion app · Official Minecraft Launcher handoff · Fabric 26.2 · Java 25
 </p>
 
 ---
 
-## 🎬 Dwine in game
+## 🎮 What Dwine is
 
-Dwine is a **Fabric client mod**. There is no custom launcher, Python package, account system, or profile manager required.
+Dwine has two pieces that work together:
 
-<p align="center">
-  <img src="assets/media/demo.gif" width="820" alt="Dwine client: tile menu, sleek buttons, HUD, HUD editor"/>
-</p>
+- **Dwine for Windows** — a dark desktop companion app that stores its own settings locally, prepares the official Minecraft installation, installs Fabric for Minecraft 26.2, installs the bundled Dwine client mod, and opens the official Minecraft Launcher.
+- **Dwine client mod** — a native Fabric 26.2 client mod bundled inside the Windows app. Press the configurable **Open Dwine** key binding (J by default) to open the in-game Dwine screen.
 
-<table>
-  <tr>
-    <td width="50%"><img src="assets/media/menu.png" alt="Dwine tile select menu"/></td>
-    <td width="50%"><img src="assets/media/settings.png" alt="Module settings sheet"/></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Tile select menu — Right Shift</sub></td>
-    <td align="center"><sub>Per-module settings</sub></td>
-  </tr>
-  <tr>
-    <td width="50%"><img src="assets/media/title-buttons.png" alt="Sleek custom buttons"/></td>
-    <td width="50%"><img src="assets/media/hud.png" alt="In-game HUD"/></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Custom sleek buttons</sub></td>
-    <td align="center"><sub>Configurable HUD modules</sub></td>
-  </tr>
-</table>
+Dwine does **not** replace Microsoft/Mojang authentication and does not implement its own Minecraft account login. The official Minecraft Launcher remains responsible for launching the real game.
 
-<p align="center"><sub>HUD editor: Right Ctrl · <a href="assets/media/hud-editor.png">screenshot</a> · <a href="assets/media/demo.mp4">demo video</a></sub></p>
+## 🖥️ Windows companion launcher
 
-## ✨ Features
+The launcher UI uses the Dwine dark dashboard design with Home, Instances, Mods, Resource Packs, Shaders and Options navigation, a quick-play card, status information, and a large Play button.
 
-- **Modern module menu** — press **Right Shift** to open the tile-based module menu.
-- **HUD editor** — press **Right Ctrl** to drag and resize HUD elements.
-- **HUD modules** — FPS, CPS, coordinates, direction, ping, clock, keystrokes, armour, potions, session timer, speed, biome, watermark.
-- **Render modules** — Fullbright, Zoom, No Bobbing, FOV changer.
-- **Movement modules** — Toggle Sprint, Toggle Sneak, Auto Sprint.
-- **Misc modules** — Frame Limit.
-- **Custom UI styling** — Dwine restyles vanilla buttons with its own client theme.
-- **Standalone configuration** — settings are stored in `config/dwine/features.json` and are created automatically on first launch.
+When **Play Now** is used, Dwine:
 
-Dwine is client-side. Always follow the rules of the server you play on.
+1. Detects the user's normal `.minecraft` directory.
+2. Resolves a compatible Fabric loader for Minecraft 26.2.
+3. Installs the Fabric profile into the normal Minecraft installation.
+4. Copies the bundled `dwine-26.2.jar` into the user's `mods` directory.
+5. Registers a **Dwine 26.2** installation in `launcher_profiles.json`.
+6. Opens the official Minecraft Launcher.
 
-## 📦 Installation
+Launcher state is stored in Dwine's own Electron user-data directory. A custom Dwine jar may still be selected for development/testing, but normal packaged builds use the bundled 26.2 jar automatically.
 
-Dwine currently targets **Minecraft 1.21.1**, **Fabric Loader 0.16.5+**, **Fabric API**, and **Java 21**.
+## 🧩 Minecraft 26.2 mod
 
-1. Install Fabric Loader for Minecraft 1.21.1.
-2. Install Fabric API for Minecraft 1.21.1.
-3. Download the Dwine `.jar` from GitHub Actions or a release.
-4. Put the Dwine jar into your Minecraft `mods` folder.
-5. Start Minecraft using the Fabric profile.
+The active 26.2 source lives in:
 
-No separate Dwine launcher is needed.
+```text
+src/main26/java/com/dwine/
+```
 
-## 🔨 Building from source
+The previous 1.21-era implementation remains under `src/main/java/com/dwine/` as migration/reference source and is intentionally excluded from the 26.2 compilation source set because Minecraft 26.2 replaced major GUI, input and rendering APIs.
+
+The current 26.2-native layer includes:
+
+- a Fabric client entrypoint;
+- a configurable Dwine key mapping;
+- a native 26.2 screen using the current GUI render-state API;
+- launcher-managed Fabric 26.2 installation and local mod deployment.
+
+Legacy 1.21 HUD/module rendering code is retained as reference rather than being falsely marked compatible with the new 26.2 rendering architecture.
+
+## 🔨 Build the mod
+
+Minecraft 26.2 requires Java 25 for this project.
 
 ```bash
-git clone https://github.com/MilkdromedaStudios/Dwine-Minecraft-Launcher.git
-cd Dwine-Minecraft-Launcher
 ./gradlew build
 ```
 
-The compiled jars are written to:
+The mod jars are written to:
 
 ```text
 build/libs/
 ```
 
-To launch the Fabric development client:
+## 📦 Build the Windows app
+
+The GitHub Actions workflow builds the 26.2 mod first, embeds that exact jar in the Electron application, and then creates Windows installer and portable executables.
+
+For local launcher development:
 
 ```bash
-./gradlew runClient
+cd launcher
+npm install
+npm start
 ```
 
-## 🏗 Project layout
-
-```text
-src/main/java/com/dwine/
-├── config/      standalone config system
-├── gui/         tile menu, HUD editor, theme
-├── mixin/       vanilla UI integrations
-├── module/      module framework and implementations
-└── setting/     module setting types
-
-src/main/resources/
-├── assets/dwine/
-├── dwine.mixins.json
-└── fabric.mod.json
-```
-
-## 🧪 Development
-
-GitHub Actions builds the mod on pushes and pull requests. Tagged `v*` releases attach the built jar automatically.
+For Windows packaging after staging `launcher/bundled/dwine-26.2.jar`:
 
 ```bash
-./gradlew build --stacktrace
+cd launcher
+npm run dist
 ```
+
+## 🧪 CI
+
+- `Build Dwine mod` verifies the Minecraft 26.2 / Fabric / Java 25 jar.
+- `Build Dwine Windows launcher` builds that mod, embeds it, then produces the Windows `.exe` artifacts.
 
 ---
 
