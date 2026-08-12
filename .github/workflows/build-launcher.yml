@@ -1,0 +1,48 @@
+name: Build Dwine Windows launcher
+
+on:
+  push:
+    branches:
+      - dwine-windows-companion-launcher
+  pull_request:
+    paths:
+      - "launcher/**"
+      - ".github/workflows/build-launcher.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-launcher:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: launcher
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: launcher/package.json
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build Windows executables
+        run: npm run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Upload launcher executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: dwine-windows-launcher
+          path: |
+            launcher/dist/*.exe
+            launcher/dist/*.yml
+          if-no-files-found: error
