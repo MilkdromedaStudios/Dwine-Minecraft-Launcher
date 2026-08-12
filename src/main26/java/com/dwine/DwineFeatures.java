@@ -56,7 +56,7 @@ public final class DwineFeatures {
     public void registerHud() {
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath(DwineClient.MOD_ID, "hud"), (graphics, delta) -> {
             Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null || mc.options.hideGui) return;
+            if (mc.player == null) return;
 
             int y = 8;
             if (enabled("Watermark")) {
