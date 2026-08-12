@@ -3,9 +3,8 @@ package com.dwine;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
 import net.minecraft.client.KeyMapping;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
@@ -20,7 +19,7 @@ public final class DwineClient implements ClientModInitializer {
     private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
             Identifier.fromNamespaceAndPath(MOD_ID, "general"));
 
-    private static final KeyMapping OPEN_DWINE = KeyBindingHelper.registerKeyBinding(
+    private static final KeyMapping OPEN_DWINE = KeyMappingHelper.registerKeyMapping(
             new KeyMapping(
                     "key.dwine.open_menu",
                     InputConstants.Type.KEYSYM,
@@ -33,9 +32,7 @@ public final class DwineClient implements ClientModInitializer {
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (OPEN_DWINE.consumeClick()) {
-                if (client.currentScreen == null) {
-                    Minecraft.getInstance().setScreen(new DwineScreen(Component.literal("Dwine")));
-                }
+                client.gui.setScreen(new DwineScreen(Component.literal("Dwine")));
             }
         });
     }
