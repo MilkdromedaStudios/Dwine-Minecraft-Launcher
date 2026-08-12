@@ -1,0 +1,36 @@
+{
+  "name": "dwine-launcher",
+  "version": "0.3.0",
+  "description": "Dwine companion launcher for the official Minecraft Launcher",
+  "main": "src/main.js",
+  "author": "Milkdromeda Studios",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win nsis portable"
+  },
+  "devDependencies": {
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "dev.digitbox.dwine",
+    "productName": "Dwine",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": ["nsis", "portable"]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
