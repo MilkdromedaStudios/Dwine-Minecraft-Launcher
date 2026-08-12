@@ -23,10 +23,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- * Reads and writes {@code config/dwine/features.json} — the single file the
- * Python Dwine launcher and this mod both speak. The launcher can pre-seed
- * which modules are on and their settings before the game starts; the mod
- * loads those, lets the player tweak them in-game, and writes them back.
+ * Reads and writes Dwine's standalone client configuration at
+ * {@code config/dwine/features.json}. The mod creates the file with defaults
+ * on first launch and keeps all module, keybind, HUD and theme settings there.
  */
 public class ConfigManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("dwine-config");
@@ -42,11 +41,9 @@ public class ConfigManager {
         this.file = FabricLoader.getInstance().getConfigDir().resolve("dwine").resolve("features.json");
     }
 
-    // -- load ----------------------------------------------------------
-
     public void load() {
         if (!Files.exists(file)) {
-            save(); // materialise defaults so the launcher has something to edit
+            save();
             return;
         }
         try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
@@ -102,8 +99,6 @@ public class ConfigManager {
             }
         }
     }
-
-    // -- save ----------------------------------------------------------
 
     public void save() {
         JsonObject root = new JsonObject();
