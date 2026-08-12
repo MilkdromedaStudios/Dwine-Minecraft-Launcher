@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dwine</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="window-controls">
+    <button id="minimize">—</button><button id="maximize">□</button><button id="close">×</button>
+  </div>
+  <aside class="sidebar drag">
+    <div class="brand no-drag"><div class="cube-logo"><i></i><i></i><i></i></div><div><strong>Dwine</strong><span>Minecraft Launcher</span></div></div>
+    <nav class="no-drag">
+      <button class="nav active" data-page="home"><span>⌂</span>Home</button>
+      <button class="nav"><span>◇</span>Instances</button>
+      <button class="nav"><span>✚</span>Mods</button>
+      <button class="nav"><span>▱</span>Resource Packs</button>
+      <button class="nav"><span>☷</span>Shaders</button>
+      <button class="nav"><span>⚙</span>Options</button>
+    </nav>
+    <div class="quick no-drag"><label>QUICK PLAY</label><button class="instance"><span class="grass">▰</span><span><b>Dwine 26.2</b><small>Fabric · Official Launcher</small></span><span>⌄</span></button></div>
+    <div class="side-bottom no-drag">
+      <div class="ready"><span id="statusDot"></span><b id="statusText">Checking…</b></div>
+      <small id="runtimeText">Minecraft 26.2 · Fabric</small>
+      <div class="socials"><button>◉</button><button>◖</button><button>◎</button></div>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="hero-head"><span>Welcome back!</span><h1>Ready to play?</h1></header>
+    <section class="hero-card">
+      <div class="hero-copy"><h2>Dwine</h2><p>A clean and modern Minecraft<br/>experience.</p><button id="playNow" class="primary"><span>▶</span> Play Now</button><button id="prepare" class="secondary">Prepare 26.2</button></div>
+      <div class="sun"></div><div class="mountains"></div><div class="terrain"></div>
+    </section>
+
+    <section class="grid">
+      <article class="panel recent">
+        <h3>Recent Instances</h3>
+        <div class="instance-row"><span class="grass">▰</span><div><b>Dwine 26.2</b><small>26.2 · Fabric</small></div><button id="rowLaunch">▶</button></div>
+        <div class="instance-row dim"><span class="purple">◆</span><div><b>Modded Adventures</b><small>Local profile</small></div><button>▶</button></div>
+        <div class="instance-row dim"><span class="craft">▦</span><div><b>Vanilla+</b><small>Official Launcher</small></div><button>▶</button></div>
+        <button class="wide">☷ &nbsp; View All Instances <span>›</span></button>
+      </article>
+      <article class="panel news">
+        <div class="panel-title"><h3>News</h3><button>View All</button></div>
+        <div class="news-row"><div class="news-image sunset"></div><div><b>Dwine 26.2 launcher</b><p>Official-launcher handoff with local mod registration.</p><small>Local</small></div></div>
+        <div class="news-row"><div class="news-image fabric">F</div><div><b>Fabric Loader</b><p>Resolved automatically when preparing the instance.</p><small>Fabric</small></div></div>
+        <div class="news-row"><div class="news-image logo-mini">◇</div><div><b>Dwine</b><p>Client mod and companion launcher.</p><small>Milkdromeda Studios</small></div></div>
+      </article>
+    </section>
+
+    <section class="panel installed">
+      <h3>Installed Mods</h3>
+      <div class="mod-cards">
+        <div class="mod-card"><span class="mod-icon green">D</span><div><b>Dwine</b><small id="jarLabel">Select 26.2 jar</small></div></div>
+        <div class="mod-card"><span class="mod-icon cyan">F</span><div><b>Fabric API</b><small>Required</small></div></div>
+        <div class="mod-card"><span class="mod-icon violet">S</span><div><b>Sodium</b><small>Optional</small></div></div>
+        <div class="mod-card"><span class="mod-icon blue">I</span><div><b>Iris</b><small>Optional</small></div></div>
+        <button id="manageMods" class="manage">✚ &nbsp; Manage Mods</button>
+      </div>
+    </section>
+    <div id="toast" class="toast"></div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>

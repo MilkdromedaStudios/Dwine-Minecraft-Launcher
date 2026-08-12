@@ -1,0 +1,88 @@
+name: Build Dwine Windows launcher
+
+on:
+  push:
+    branches:
+      - dwine-windows-companion-launcher
+  pull_request:
+    paths:
+      - "launcher/**"
+      - "src/main26/**"
+      - "src/main/resources/**"
+      - "build.gradle"
+      - "gradle.properties"
+      - ".github/workflows/build-launcher.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows-launcher:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "25"
+
+      - name: Set up Gradle 9.5.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.5.1"
+
+      - name: Build bundled Dwine 26.2 mod
+        run: gradle build --stacktrace
+
+      - name: Stage bundled mod
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force launcher\bundled | Out-Null
+          $jar = Get-ChildItem build\libs\dwine-*.jar | Where-Object { $_.Name -notmatch 'sources' } | Select-Object -First 1
+          if (-not $jar) { throw 'No Dwine mod jar was produced.' }
+          Copy-Item $jar.FullName launcher\bundled\dwine-26.2.jar -Force
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: launcher/package.json
+
+      - name: Install launcher dependencies
+        shell: pwsh
+        working-directory: launcher
+        run: |
+          $ErrorActionPreference = 'Continue'
+          for ($attempt = 1; $attempt -le 3; $attempt++) {
+            Write-Host "npm install attempt $attempt of 3"
+            npm install --no-audit --no-fund
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($attempt -lt 3) {
+              Write-Host "Transient npm/Electron download failure; cleaning and retrying..."
+              Start-Sleep -Seconds (5 * $attempt)
+              if (Test-Path node_modules) {
+                Remove-Item node_modules -Recurse -Force -ErrorAction SilentlyContinue
+              }
+            }
+          }
+          throw 'npm install failed after 3 attempts.'
+
+      - name: Build Windows executables
+        working-directory: launcher
+        run: npm run dist
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+
+      - name: Upload launcher executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: dwine-windows-launcher
+          path: |
+            launcher/dist/*.exe
+            launcher/dist/*.yml
+          if-no-files-found: error
