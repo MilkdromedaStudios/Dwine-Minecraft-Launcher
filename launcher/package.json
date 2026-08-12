@@ -23,6 +23,12 @@
       "src/**/*",
       "package.json"
     ],
+    "extraResources": [
+      {
+        "from": "bundled/dwine-26.2.jar",
+        "to": "dwine/dwine-26.2.jar"
+      }
+    ],
     "win": {
       "target": ["nsis", "portable"]
     },
