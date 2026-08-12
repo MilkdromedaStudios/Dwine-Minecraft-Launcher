@@ -5,20 +5,20 @@
 <h3 align="center">A sleek standalone Fabric client mod for Minecraft.</h3>
 
 <p align="center">
-  Fabric · Minecraft 26.x · Java 25 · Client-side quality-of-life features
+  Fabric · Minecraft 1.21.1 · Java 21 · Client-side quality-of-life features
 </p>
 
 <p align="center">
   <img alt="fabric" src="https://img.shields.io/badge/loader-Fabric-DBD0B4">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-3DDC97">
-  <img alt="minecraft" src="https://img.shields.io/badge/Minecraft-26.x-62B47A">
+  <img alt="minecraft" src="https://img.shields.io/badge/Minecraft-1.21.1-62B47A">
 </p>
 
 ---
 
 ## 🎬 Dwine in game
 
-Dwine is now just a **Fabric client mod**. There is no custom launcher, Python package, account system, or profile manager required.
+Dwine is a **Fabric client mod**. There is no custom launcher, Python package, account system, or profile manager required.
 
 <p align="center">
   <img src="assets/media/demo.gif" width="820" alt="Dwine client: tile menu, sleek buttons, HUD, HUD editor"/>
@@ -60,10 +60,10 @@ Dwine is client-side. Always follow the rules of the server you play on.
 
 ## 📦 Installation
 
-Dwine currently targets **Minecraft 26.x**, **Fabric Loader 0.19+**, **Fabric API**, and **Java 25**.
+Dwine currently targets **Minecraft 1.21.1**, **Fabric Loader 0.16.5+**, **Fabric API**, and **Java 21**.
 
-1. Install Fabric Loader for a supported Minecraft 26.x version.
-2. Install Fabric API.
+1. Install Fabric Loader for Minecraft 1.21.1.
+2. Install Fabric API for Minecraft 1.21.1.
 3. Download the Dwine `.jar` from GitHub Actions or a release.
 4. Put the Dwine jar into your Minecraft `mods` folder.
 5. Start Minecraft using the Fabric profile.
