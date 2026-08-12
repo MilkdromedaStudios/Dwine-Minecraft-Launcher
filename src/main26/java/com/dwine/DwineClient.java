@@ -41,7 +41,7 @@ public final class DwineClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             boolean requestedMenu = OPEN_DWINE.consumeClick() || OPEN_DWINE_FALLBACK.consumeClick();
             boolean menuKeyDown = OPEN_DWINE.isDown() || OPEN_DWINE_FALLBACK.isDown();
-            if ((requestedMenu || (menuKeyDown && !menuKeyWasDown)) && client.screen == null) {
+            if (requestedMenu || (menuKeyDown && !menuKeyWasDown)) {
                 client.gui.setScreen(new DwineScreen(Component.literal("Dwine")));
             }
             menuKeyWasDown = menuKeyDown;
