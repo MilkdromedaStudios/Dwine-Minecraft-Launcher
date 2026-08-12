@@ -8,9 +8,8 @@ import com.dwine.module.ModuleManager;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.rendering.v1.hud.HudElementRegistry;
+import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.Minecraft;
-import net.minecraft.resources.ResourceLocation;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +18,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Dwine client entrypoint. Wires up the module manager, the shared config, a
- * HUD element and raw keyboard handling for the menu, HUD editor and
- * per-module toggles.
+ * Dwine client entrypoint. Wires up the module manager, config, HUD rendering,
+ * and keyboard handling for the menu, HUD editor and module toggles.
  */
 public class DwineClient implements ClientModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("dwine");
@@ -37,15 +35,13 @@ public class DwineClient implements ClientModInitializer {
         Dwine.config.load();
         Dwine.modules.load();
 
-        HudElementRegistry.addLast(
-                ResourceLocation.fromNamespaceAndPath("dwine", "hud"),
-                (graphics, tickCounter) -> {
-                    Minecraft mc = Minecraft.getInstance();
-                    if (mc.player == null || mc.level == null || mc.options.hideGui) {
-                        return;
-                    }
-                    Dwine.modules.renderHud(graphics);
-                });
+        HudRenderCallback.EVENT.register((graphics, tickCounter) -> {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null || mc.level == null || mc.options.hideGui) {
+                return;
+            }
+            Dwine.modules.renderHud(graphics);
+        });
 
         ClientTickEvents.END_CLIENT_TICK.register(this::onEndTick);
 
@@ -70,7 +66,6 @@ public class DwineClient implements ClientModInitializer {
         long handle = mc.getWindow().getWindow();
         ConfigManager config = Dwine.config;
 
-        // Only react to bindings when no screen is capturing input.
         boolean canBind = mc.screen == null;
 
         if (canBind) {
@@ -91,7 +86,6 @@ public class DwineClient implements ClientModInitializer {
         refreshHeld(handle);
     }
 
-    /** Rising-edge detection: true only on the tick a key transitions to down. */
     private boolean pressedThisTick(long handle, int key) {
         if (key == GLFW.GLFW_KEY_UNKNOWN) {
             return false;
