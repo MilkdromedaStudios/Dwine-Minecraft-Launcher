@@ -49,9 +49,9 @@ public final class DwineScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
         int x = this.width / 2 - 245;
         int y = 22;
+        // Draw Dwine chrome first so vanilla/widget rendering remains visible on top.
         graphics.fill(0, 0, 10000, 10000, 0xD9080B16);
         graphics.fill(x, y, x + 490, y + 286, 0xF5161A2C);
         graphics.fill(x, y, x + 490, y + 54, 0xFF202647);
@@ -61,6 +61,7 @@ public final class DwineScreen extends Screen {
         graphics.text(this.font, "Modules", x + 18, y + 68, 0xFFFFFFFF, true);
         graphics.text(this.font, "HUD / Render / Movement", x + 74, y + 68, 0xFF7783A6, false);
         graphics.text(this.font, "RShift or J closes/opens Dwine • C zoom", x + 18, y + 266, 0xFF7783A6, false);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
     @Override
