@@ -39,8 +39,8 @@ public final class DwineHudScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
         int x = this.width / 2 - 205;
+        // Draw the panel before super so the buttons render above it.
         graphics.fill(0, 0, 10000, 10000, 0xE9080B16);
         graphics.fill(x, 26, x + 410, 280, 0xF5161A2C);
         graphics.fill(x, 26, x + 410, 80, 0xFF202647);
@@ -48,6 +48,7 @@ public final class DwineHudScreen extends Screen {
         graphics.text(this.font, "DWINE HUD EDITOR", x + 20, 43, 0xFFB8A7FF, true);
         graphics.text(this.font, "Choose which widgets appear in game", x + 20, 61, 0xFF9CA7C4, false);
         graphics.text(this.font, "Live HUD preview is visible behind this screen when in a world.", x + 20, 246, 0xFF7783A6, false);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
     @Override
