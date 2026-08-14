@@ -18,7 +18,6 @@ public final class DwineUiHooks {
     public static void register() {
         ScreenEvents.AFTER_INIT.register((client, screen, scaledWidth, scaledHeight) -> {
             if (screen instanceof TitleScreen || screen instanceof PauseScreen) {
-                // Preserve every vanilla action, but replace its visible Button with the Dwine skin.
                 List<AbstractWidget> widgets = Screens.getWidgets(screen);
                 List<AbstractWidget> snapshot = new ArrayList<>(widgets);
                 for (AbstractWidget widget : snapshot) {
@@ -27,7 +26,7 @@ public final class DwineUiHooks {
                     if (index < 0) continue;
                     DwineButton replacement = new DwineButton(
                             vanilla.getX(), vanilla.getY(), vanilla.getWidth(), vanilla.getHeight(),
-                            vanilla.getMessage(), b -> vanilla.onPress(), vanilla.getWidth() < 120);
+                            vanilla.getMessage(), b -> vanilla.onPress(null), vanilla.getWidth() < 120);
                     replacement.active = vanilla.active;
                     replacement.visible = vanilla.visible;
                     widgets.set(index, replacement);
