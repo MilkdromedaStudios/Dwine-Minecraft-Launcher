@@ -1,36 +1,31 @@
 package com.dwine;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
 /** HUD configuration surface modeled after the original Dwine HUD editor. */
 public final class DwineHudScreen extends Screen {
-    private static final String[] HUD = {"Watermark", "FPS", "Coordinates", "Keystrokes"};
+    private static final String[] HUD = {"Watermark", "FPS", "Coordinates", "Keystrokes", "Clock", "Speed", "Direction", "Health", "Armor", "Memory", "FOV", "Gamma"};
 
-    public DwineHudScreen(Component title) {
-        super(title);
-    }
+    public DwineHudScreen(Component title) { super(title); }
 
     @Override
     protected void init() {
-        int x = this.width / 2 - 180;
-        int y = 92;
+        int x = this.width / 2 - 205;
+        int y = 88;
         for (int i = 0; i < HUD.length; i++) {
             String name = HUD[i];
-            this.addRenderableWidget(Button.builder(label(name), b -> {
+            int col = i % 2;
+            int row = i / 2;
+            this.addRenderableWidget(new DwineButton(x + 16 + col * 195, y + row * 31, 180, 24,
+                    label(name), b -> {
                         boolean enabled = DwineFeatures.INSTANCE.toggle(name);
                         b.setMessage(Component.literal(name + (enabled ? "   VISIBLE" : "   HIDDEN")));
-                    })
-                    .bounds(x, y + i * 32, 360, 24)
-                    .build());
+                    }));
         }
-
-        this.addRenderableWidget(Button.builder(Component.literal("Back to Modules"), b ->
-                        this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine"))))
-                .bounds(x, y + 4 * 32 + 20, 360, 24)
-                .build());
+        this.addRenderableWidget(new DwineButton(x + 16, 286, 374, 24, Component.literal("Back to Modules"),
+                b -> this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine")))));
     }
 
     private Component label(String name) {
@@ -39,19 +34,16 @@ public final class DwineHudScreen extends Screen {
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float delta) {
-        super.extractRenderState(graphics, mouseX, mouseY, delta);
         int x = this.width / 2 - 205;
         graphics.fill(0, 0, 10000, 10000, 0xE9080B16);
-        graphics.fill(x, 26, x + 410, 280, 0xF5161A2C);
+        graphics.fill(x, 26, x + 410, 326, 0xF5161A2C);
         graphics.fill(x, 26, x + 410, 80, 0xFF202647);
-        graphics.fill(x, 79, x + 410, 81, 0xFF8E7CFF);
+        graphics.fill(x, 79, x + 410, 82, 0xFF8E7CFF);
         graphics.text(this.font, "DWINE HUD EDITOR", x + 20, 43, 0xFFB8A7FF, true);
         graphics.text(this.font, "Choose which widgets appear in game", x + 20, 61, 0xFF9CA7C4, false);
-        graphics.text(this.font, "Live HUD preview is visible behind this screen when in a world.", x + 20, 246, 0xFF7783A6, false);
+        graphics.text(this.font, "More HUD modules are available from the HUD category.", x + 20, 315, 0xFF7783A6, false);
+        super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
+    @Override public boolean isPauseScreen() { return false; }
 }

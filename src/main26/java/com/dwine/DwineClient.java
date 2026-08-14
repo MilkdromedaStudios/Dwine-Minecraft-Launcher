@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 /** Minecraft 26.2 native Dwine client entrypoint. */
 public final class DwineClient implements ClientModInitializer {
     public static final String MOD_ID = "dwine";
-    public static final String VERSION = "0.5.0";
+    public static final String VERSION = "0.7.0";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     private static final KeyMapping.Category CATEGORY = KeyMapping.Category.register(
@@ -36,6 +36,8 @@ public final class DwineClient implements ClientModInitializer {
     public void onInitializeClient() {
         LOGGER.info("Starting Dwine {} for Minecraft 26.2", VERSION);
         DwineFeatures.INSTANCE.registerHud();
+        DwineExtraHud.register();
+        DwineVisualRuntime.register();
         DwineUiHooks.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
@@ -53,18 +55,14 @@ public final class DwineClient implements ClientModInitializer {
             if (DwineFeatures.INSTANCE.enabled("Toggle Sprint")) {
                 if (sprintDown && !sprintWasDown) sprintLatched = !sprintLatched;
                 if (sprintLatched) client.player.setSprinting(true);
-            } else {
-                sprintLatched = false;
-            }
+            } else sprintLatched = false;
             sprintWasDown = sprintDown;
 
             boolean sneakDown = client.options.keyShift.isDown();
             if (DwineFeatures.INSTANCE.enabled("Toggle Sneak")) {
                 if (sneakDown && !sneakWasDown) sneakLatched = !sneakLatched;
                 client.options.keyShift.setDown(sneakLatched || sneakDown);
-            } else {
-                sneakLatched = false;
-            }
+            } else sneakLatched = false;
             sneakWasDown = sneakDown;
         });
     }
