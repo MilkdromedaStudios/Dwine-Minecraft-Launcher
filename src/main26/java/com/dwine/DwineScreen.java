@@ -3,7 +3,6 @@ package com.dwine;
 import java.util.List;
 
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 
@@ -13,9 +12,7 @@ public final class DwineScreen extends Screen {
     private final String selectedCategory;
     private final int page;
 
-    public DwineScreen(Component title) {
-        this(title, "HUD", 0);
-    }
+    public DwineScreen(Component title) { this(title, "HUD", 0); }
 
     private DwineScreen(Component title, String selectedCategory, int page) {
         super(title);
@@ -29,15 +26,12 @@ public final class DwineScreen extends Screen {
         int panelY = 20;
         List<String> cats = DwineFeatures.INSTANCE.categoryNames();
 
-        // Category bar.
         int tabW = 96;
         for (int i = 0; i < cats.size(); i++) {
             String category = cats.get(i);
-            String title = category.equals(selectedCategory) ? "[ " + category + " ]" : category;
-            this.addRenderableWidget(Button.builder(Component.literal(title), b ->
-                            this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine"), category, 0)))
-                    .bounds(panelX + 18 + i * 102, panelY + 62, tabW, 22)
-                    .build());
+            String title = category.equals(selectedCategory) ? "● " + category : category;
+            this.addRenderableWidget(new DwineButton(panelX + 18 + i * 102, panelY + 62, tabW, 22,
+                    Component.literal(title), b -> this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine"), category, 0)), true));
         }
 
         List<String> names = DwineFeatures.INSTANCE.namesForCategory(selectedCategory);
@@ -52,31 +46,23 @@ public final class DwineScreen extends Screen {
             int slot = i - from;
             int col = slot % 2;
             int row = slot / 2;
-            this.addRenderableWidget(Button.builder(label(name), b -> {
+            this.addRenderableWidget(new DwineButton(panelX + 18 + col * 258, startY + row * 34, 240, 26,
+                    label(name), b -> {
                         boolean enabled = DwineFeatures.INSTANCE.toggle(name);
                         b.setMessage(Component.literal(name + (enabled ? "   ON" : "   OFF")));
-                    })
-                    .bounds(panelX + 18 + col * 258, startY + row * 34, 240, 26)
-                    .build());
+                    }));
         }
 
         int navY = panelY + 244;
-        if (safePage > 0) {
-            this.addRenderableWidget(Button.builder(Component.literal("< Previous"), b ->
-                            this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine"), selectedCategory, safePage - 1)))
-                    .bounds(panelX + 18, navY, 116, 22).build());
-        }
-        if (safePage + 1 < pageCount) {
-            this.addRenderableWidget(Button.builder(Component.literal("Next >"), b ->
-                            this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine"), selectedCategory, safePage + 1)))
-                    .bounds(panelX + 142, navY, 116, 22).build());
-        }
+        if (safePage > 0) this.addRenderableWidget(new DwineButton(panelX + 18, navY, 116, 22, Component.literal("‹ Previous"),
+                b -> this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine"), selectedCategory, safePage - 1)), true));
+        if (safePage + 1 < pageCount) this.addRenderableWidget(new DwineButton(panelX + 142, navY, 116, 22, Component.literal("Next ›"),
+                b -> this.minecraft.gui.setScreen(new DwineScreen(Component.literal("Dwine"), selectedCategory, safePage + 1)), true));
 
-        this.addRenderableWidget(Button.builder(Component.literal("HUD Editor"), b ->
-                        this.minecraft.gui.setScreen(new DwineHudScreen(Component.literal("Dwine HUD"))))
-                .bounds(panelX + 282, navY, 116, 22).build());
-        this.addRenderableWidget(Button.builder(Component.literal("Done"), b -> this.minecraft.gui.setScreen(null))
-                .bounds(panelX + 406, navY, 116, 22).build());
+        this.addRenderableWidget(new DwineButton(panelX + 282, navY, 116, 22, Component.literal("HUD Editor"),
+                b -> this.minecraft.gui.setScreen(new DwineHudScreen(Component.literal("Dwine HUD"))), true));
+        this.addRenderableWidget(new DwineButton(panelX + 406, navY, 116, 22, Component.literal("Done"),
+                b -> this.minecraft.gui.setScreen(null), true));
     }
 
     private Component label(String name) {
@@ -88,20 +74,17 @@ public final class DwineScreen extends Screen {
         int x = this.width / 2 - 270;
         int y = 20;
         graphics.fill(0, 0, 10000, 10000, 0xDF070A14);
-        if (DwineFeatures.INSTANCE.enabled("Menu Glow")) {
-            graphics.fill(x - 3, y - 3, x + 543, y + 305, 0x558E7CFF);
-        }
+        if (DwineFeatures.INSTANCE.enabled("Menu Glow")) graphics.fill(x - 3, y - 3, x + 543, y + 305, 0x558E7CFF);
         graphics.fill(x, y, x + 540, y + 302, 0xFA15192B);
         graphics.fill(x, y, x + 540, y + 52, 0xFF202647);
         if (DwineFeatures.INSTANCE.enabled("Menu Accent")) graphics.fill(x, y + 51, x + 540, y + 54, 0xFF8E7CFF);
         graphics.text(this.font, "DWINE", x + 18, y + 15, 0xFFB8A7FF, true);
-        if (DwineFeatures.INSTANCE.enabled("Menu Version")) graphics.text(this.font, "client 0.6 • Minecraft 26.2", x + 74, y + 15, 0xFFA8B0C8, false);
+        if (DwineFeatures.INSTANCE.enabled("Menu Version")) graphics.text(this.font, "client 0.7 • Minecraft 26.2", x + 74, y + 15, 0xFFA8B0C8, false);
         graphics.text(this.font, selectedCategory + " Modules", x + 18, y + 88, 0xFFFFFFFF, true);
         if (DwineFeatures.INSTANCE.enabled("Menu Module Count")) graphics.text(this.font, DwineFeatures.INSTANCE.count() + " total modules", x + 430, y + 88, 0xFF9AA5C7, false);
         if (DwineFeatures.INSTANCE.enabled("Menu Tips")) graphics.text(this.font, "RShift / J: menu   •   C: zoom   •   settings save automatically", x + 18, y + 282, 0xFF7783A6, false);
         super.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
-    @Override
-    public boolean isPauseScreen() { return false; }
+    @Override public boolean isPauseScreen() { return false; }
 }
