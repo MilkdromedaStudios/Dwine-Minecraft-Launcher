@@ -37,6 +37,7 @@ public final class DwineClient implements ClientModInitializer {
         LOGGER.info("Starting Dwine {} for Minecraft 26.2", VERSION);
         DwineFeatures.INSTANCE.registerHud();
         DwineExtraHud.register();
+        DwineVisualRuntime.register();
         DwineUiHooks.register();
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
