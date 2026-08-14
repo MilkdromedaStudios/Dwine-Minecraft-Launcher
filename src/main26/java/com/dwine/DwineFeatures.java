@@ -3,6 +3,8 @@ package com.dwine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalTime;
@@ -20,23 +22,25 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.client.Minecraft;
 import net.minecraft.resources.Identifier;
 
-/**
- * Native 26.2 Dwine feature registry. The catalog intentionally contains more
- * than one hundred client-side modules while keeping multiplayer behavior fair:
- * HUD, cosmetics, diagnostics, accessibility, render presets and movement QoL.
- */
+/** Native 26.2 Dwine feature registry and live module runtime. */
 public final class DwineFeatures {
     public static final DwineFeatures INSTANCE = new DwineFeatures();
 
     private final LinkedHashMap<String, Boolean> features = new LinkedHashMap<>();
     private final LinkedHashMap<String, String> categories = new LinkedHashMap<>();
     private final Path configFile = FabricLoader.getInstance().getConfigDir().resolve("dwine/features-26.2.properties");
+    private final long sessionStarted = System.currentTimeMillis();
     private Double savedGamma;
     private Integer savedFov;
     private Boolean savedBob;
+    private double lastX;
+    private double lastY;
+    private double lastZ;
+    private long lastSample;
+    private double horizontalSpeed;
+    private double verticalSpeed;
 
     private DwineFeatures() {
-        // 30 HUD modules
         add("HUD", "Watermark", true); add("HUD", "FPS", true); add("HUD", "Coordinates", true); add("HUD", "Keystrokes", true);
         add("HUD", "Clock", false); add("HUD", "Session Time", false); add("HUD", "Speed", false); add("HUD", "Direction", false);
         add("HUD", "Facing", false); add("HUD", "Yaw", false); add("HUD", "Pitch", false); add("HUD", "Health", false);
@@ -46,7 +50,6 @@ public final class DwineFeatures {
         add("HUD", "Sprint State", false); add("HUD", "Sneak State", false); add("HUD", "Zoom State", false); add("HUD", "FOV", false);
         add("HUD", "Gamma", false); add("HUD", "Active Modules", false);
 
-        // 25 Render modules
         add("Render", "Fullbright", false); add("Render", "Zoom", false); add("Render", "No Bobbing", false);
         add("Render", "Cinematic FOV", false); add("Render", "Wide FOV", false); add("Render", "Quake FOV", false); add("Render", "Narrow FOV", false);
         add("Render", "Low Gamma", false); add("Render", "High Gamma", false); add("Render", "Dark Mode Overlay", false);
@@ -56,14 +59,12 @@ public final class DwineFeatures {
         add("Render", "Night Accent", false); add("Render", "Minimal HUD", false); add("Render", "Compact HUD", false);
         add("Render", "Large HUD Text", false); add("Render", "Shadowed HUD", false); add("Render", "Rainbow Watermark", false);
 
-        // 15 Movement / state QoL modules
         add("Movement", "Auto Sprint", false); add("Movement", "Toggle Sprint", false); add("Movement", "Toggle Sneak", false);
         add("Movement", "Sprint Reminder", false); add("Movement", "Sneak Reminder", false); add("Movement", "Jump Indicator", false);
         add("Movement", "Movement Keys", false); add("Movement", "Walk State", false); add("Movement", "Fly State", false);
         add("Movement", "Ground State", false); add("Movement", "Fall Indicator", false); add("Movement", "Velocity", false);
         add("Movement", "Horizontal Speed", false); add("Movement", "Vertical Speed", false); add("Movement", "Movement Debug", false);
 
-        // 20 Utility / diagnostics modules
         add("Utility", "Screenshot Reminder", false); add("Utility", "Coordinate Copy Hint", false); add("Utility", "World Name", false);
         add("Utility", "Server Name", false); add("Utility", "Singleplayer State", false); add("Utility", "Difficulty", false);
         add("Utility", "Gamemode", false); add("Utility", "Pause Status", false); add("Utility", "Debug Clock", false);
@@ -72,7 +73,6 @@ public final class DwineFeatures {
         add("Utility", "Hunger Warning", false); add("Utility", "Air Warning", false); add("Utility", "Position Reminder", false);
         add("Utility", "Feature Counter", false); add("Utility", "Config Path", false);
 
-        // 15 Cosmetic/client-shell modules
         add("Cosmetic", "Title Branding", true); add("Cosmetic", "Title Subtitle", true); add("Cosmetic", "Title Accent Bar", true);
         add("Cosmetic", "Title Footer", false); add("Cosmetic", "Pause Branding", true); add("Cosmetic", "Menu Glow", true);
         add("Cosmetic", "Menu Accent", true); add("Cosmetic", "Menu Version", true); add("Cosmetic", "Menu Tips", true);
@@ -92,10 +92,7 @@ public final class DwineFeatures {
     public boolean enabled(String name) { return features.getOrDefault(name, false); }
     public String category(String name) { return categories.getOrDefault(name, "Other"); }
 
-    public List<String> categoryNames() {
-        Set<String> out = new LinkedHashSet<>(categories.values());
-        return List.copyOf(out);
-    }
+    public List<String> categoryNames() { return List.copyOf(new LinkedHashSet<>(categories.values())); }
 
     public List<String> namesForCategory(String category) {
         List<String> out = new ArrayList<>();
@@ -167,25 +164,52 @@ public final class DwineFeatures {
     }
 
     private String infoLine(Minecraft mc, String name) {
+        double yaw = number(mc.player, "getYRot", 0);
+        double pitch = number(mc.player, "getXRot", 0);
+        long dayTime = (long) number(mc.level, "getDayTime", 0);
         return switch (name) {
             case "Clock" -> "Clock: " + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
-            case "Memory", "Runtime Memory", "Used Memory" -> "Memory: " + ((Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024) + " MB";
-            case "Max Memory" -> "Max memory: " + (Runtime.getRuntime().maxMemory() / 1024 / 1024) + " MB";
+            case "Session Time" -> "Session: " + formatDuration(System.currentTimeMillis() - sessionStarted);
+            case "Speed" -> String.format("Speed: %.2f b/s", horizontalSpeed);
+            case "Direction", "Facing" -> "Facing: " + cardinal(yaw);
+            case "Yaw" -> String.format("Yaw: %.1f°", yaw);
+            case "Pitch" -> String.format("Pitch: %.1f°", pitch);
+            case "Health" -> metric(mc.player, "getHealth", "Health", "♥");
+            case "Hunger" -> nestedMetric(mc.player, "getFoodData", "getFoodLevel", "Hunger", "/20");
+            case "Armor" -> metric(mc.player, "getArmorValue", "Armor", "");
+            case "Air" -> metric(mc.player, "getAirSupply", "Air", "");
+            case "XP Level" -> "XP level: " + (int) fieldNumber(mc.player, "experienceLevel", 0);
+            case "Dimension" -> "Dimension: " + shortObject(invoke(mc.level, "dimension"));
+            case "Chunk Position" -> "Chunk: " + floor(mc.player.getX()) / 16 + ", " + floor(mc.player.getZ()) / 16;
+            case "Block Position" -> String.format("Block: %d, %d, %d", floor(mc.player.getX()), floor(mc.player.getY()), floor(mc.player.getZ()));
+            case "Memory" -> "Memory: " + usedMemoryMb() + " MB";
             case "Java Version" -> "Java: " + System.getProperty("java.version");
             case "Client Version" -> "Dwine: " + DwineClient.VERSION;
-            case "FOV" -> "FOV: " + mc.options.fov().get();
-            case "Gamma" -> String.format("Gamma: %.1f", mc.options.gamma().get());
+            case "Day Counter" -> "Day: " + (dayTime / 24000L + 1);
+            case "Game Time" -> "World time: " + Math.floorMod(dayTime, 24000L);
             case "Sprint State" -> "Sprint: " + (mc.player.isSprinting() ? "ON" : "OFF");
             case "Sneak State" -> "Sneak: " + (mc.options.keyShift.isDown() ? "ON" : "OFF");
-            case "Zoom State" -> "Zoom module: " + (enabled("Zoom") ? "ON" : "OFF");
-            case "Block Position", "Chunk Position", "Position Reminder" -> String.format("Pos: %.0f, %.0f, %.0f", mc.player.getX(), mc.player.getY(), mc.player.getZ());
-            case "Movement Keys" -> "Move: " + (mc.options.keyUp.isDown() ? "W" : "-") + (mc.options.keyLeft.isDown() ? "A" : "-") + (mc.options.keyDown.isDown() ? "S" : "-") + (mc.options.keyRight.isDown() ? "D" : "-");
-            default -> name + ": ON";
+            case "Zoom State" -> "Zoom: " + (enabled("Zoom") ? "READY" : "OFF");
+            case "FOV" -> "FOV: " + mc.options.fov().get();
+            case "Gamma" -> String.format("Gamma: %.1f", mc.options.gamma().get());
+            default -> name;
         };
     }
 
     public void tick(Minecraft mc, boolean zoomHeld) {
         if (mc.player == null) return;
+        long now = System.currentTimeMillis();
+        if (lastSample == 0) {
+            lastX = mc.player.getX(); lastY = mc.player.getY(); lastZ = mc.player.getZ(); lastSample = now;
+        } else if (now - lastSample >= 100) {
+            double seconds = (now - lastSample) / 1000.0;
+            double dx = mc.player.getX() - lastX;
+            double dy = mc.player.getY() - lastY;
+            double dz = mc.player.getZ() - lastZ;
+            horizontalSpeed = Math.sqrt(dx * dx + dz * dz) / seconds;
+            verticalSpeed = dy / seconds;
+            lastX = mc.player.getX(); lastY = mc.player.getY(); lastZ = mc.player.getZ(); lastSample = now;
+        }
 
         double targetGamma = enabled("Fullbright") ? 16.0 : enabled("High Gamma") ? 4.0 : enabled("Low Gamma") ? 0.2 : Double.NaN;
         if (!Double.isNaN(targetGamma)) {
@@ -212,10 +236,68 @@ public final class DwineFeatures {
         if (enabled("Auto Sprint") && mc.options.keyUp.isDown()) mc.player.setSprinting(true);
     }
 
+    public double horizontalSpeed() { return horizontalSpeed; }
+    public double verticalSpeed() { return verticalSpeed; }
+
     private int enabledCount() { int n = 0; for (boolean v : features.values()) if (v) n++; return n; }
     private int rainbowColor() {
         float hue = (System.currentTimeMillis() % 6000L) / 6000.0f;
         return 0xFF000000 | java.awt.Color.HSBtoRGB(hue, 0.65f, 1.0f) & 0x00FFFFFF;
+    }
+
+    private static String cardinal(double yaw) {
+        int index = Math.floorMod((int) Math.floor((yaw / 90.0) + 0.5), 4);
+        return switch (index) { case 0 -> "South"; case 1 -> "West"; case 2 -> "North"; default -> "East"; };
+    }
+
+    private static String formatDuration(long ms) {
+        long total = ms / 1000L;
+        return String.format("%02d:%02d:%02d", total / 3600L, (total / 60L) % 60L, total % 60L);
+    }
+
+    private static int floor(double v) { return (int) Math.floor(v); }
+    private static long usedMemoryMb() { return (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory()) / 1024 / 1024; }
+
+    private static String metric(Object target, String method, String label, String suffix) {
+        double value = number(target, method, Double.NaN);
+        return Double.isNaN(value) ? label + ": n/a" : label + ": " + String.format("%.1f", value) + suffix;
+    }
+
+    private static String nestedMetric(Object target, String first, String second, String label, String suffix) {
+        Object nested = invoke(target, first);
+        double value = number(nested, second, Double.NaN);
+        return Double.isNaN(value) ? label + ": n/a" : label + ": " + (int) value + suffix;
+    }
+
+    private static double number(Object target, String method, double fallback) {
+        if (target == null) return fallback;
+        try {
+            Method m = target.getClass().getMethod(method);
+            Object result = m.invoke(target);
+            return result instanceof Number n ? n.doubleValue() : fallback;
+        } catch (ReflectiveOperationException ignored) { return fallback; }
+    }
+
+    private static double fieldNumber(Object target, String field, double fallback) {
+        if (target == null) return fallback;
+        try {
+            Field f = target.getClass().getField(field);
+            Object result = f.get(target);
+            return result instanceof Number n ? n.doubleValue() : fallback;
+        } catch (ReflectiveOperationException ignored) { return fallback; }
+    }
+
+    private static Object invoke(Object target, String method) {
+        if (target == null) return null;
+        try { return target.getClass().getMethod(method).invoke(target); }
+        catch (ReflectiveOperationException ignored) { return null; }
+    }
+
+    private static String shortObject(Object value) {
+        if (value == null) return "unknown";
+        String s = value.toString();
+        int slash = Math.max(s.lastIndexOf('/'), s.lastIndexOf(':'));
+        return slash >= 0 && slash + 1 < s.length() ? s.substring(slash + 1).replace(']', ' ').trim() : s;
     }
 
     private void load() {
